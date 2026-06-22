@@ -3,10 +3,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"goilerplate/constants"
-	"goilerplate/internal/models"
-	"goilerplate/internal/utils"
 	"net/http"
+	"oovah/constants"
+	"oovah/internal/models"
+	"oovah/internal/utils"
 	"os"
 )
 

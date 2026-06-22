@@ -1,13 +1,13 @@
 package main
 
 import (
-	"goilerplate/api"
-	"goilerplate/config"
-	"goilerplate/internal/db"
-	"goilerplate/internal/models"
-	"goilerplate/repo"
 	"log"
 	"net/http"
+	"oovah/api"
+	"oovah/config"
+	"oovah/internal/db"
+	"oovah/internal/models"
+	"oovah/repo"
 	"os"
 
 	"github.com/joho/godotenv"

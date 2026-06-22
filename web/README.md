@@ -1,4 +1,4 @@
-# Goilerplate
+# Oovah
 
 A clean boilerplate for full-stack applications built with Go and React.
 

@@ -1,4 +1,4 @@
-module goilerplate
+module oovah
 
 go 1.24.0
 

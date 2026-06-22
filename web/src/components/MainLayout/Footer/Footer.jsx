@@ -8,8 +8,7 @@ export const Footer = () => {
     <footer className='app-footer-56yl'>
       <div className='app-footer-56yl__container'>
         <p className='app-footer-56yl__text'>
-          © {currentYear} Goilerplate. Built as a starting point for your next
-          app.
+          © {currentYear} Oovah. Built as a starting point for your next app.
         </p>
       </div>
     </footer>

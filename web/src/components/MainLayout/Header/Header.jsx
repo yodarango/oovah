@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ROUTE_HOME } from "@constants";
-import goilerplateLogo from "../../../../public/logo.png";
+import oovahLogo from "../../../../public/logo.png";
 
 // styles
 import "./Header.css";
@@ -13,13 +13,9 @@ export const Header = () => {
         <div className='app-header-56yl__container'>
           <Link to={ROUTE_HOME} className='app-header-56yl__brand'>
             <div className='app-header-56yl__logo'>
-              <img
-                src={goilerplateLogo}
-                alt='Goilerplate Logo'
-                className='logo'
-              />
+              <img src={oovahLogo} alt='Oovah Logo' className='logo' />
             </div>
-            <span className='app-header-56yl__title'>Goilerplate</span>
+            <span className='app-header-56yl__title'>Oovah</span>
           </Link>
         </div>
       </header>

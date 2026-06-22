@@ -1,7 +1,7 @@
 {
-  "name": "goilerplate",
-  "short_name": "goilerplate",
-  "description": "goilerplate - Boilerplate for Go and React apps",
+  "name": "oovah",
+  "short_name": "oovah",
+  "description": "oovah - A clean starting point for your next app",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#130e21",
@@ -50,21 +50,21 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "goilerplate Dashboard"
+      "label": "Oovah Dashboard"
     },
     {
       "src": "/splash.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "goilerplate Mobile Interface"
+      "label": "Oovah Mobile Interface"
     }
   ],
   "shortcuts": [
     {
-      "name": "goilerplate",
-      "short_name": "goilerplate",
-      "description": "goilerplate shortcut",
+      "name": "oovah",
+      "short_name": "oovah",
+      "description": "oovah shortcut",
       "url": "/",
       "icons": [
         {

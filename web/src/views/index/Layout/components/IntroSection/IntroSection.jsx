@@ -13,12 +13,12 @@ export const IntroSection = () => {
       <div className='intro-hero'>
         <div className='intro-hero__content'>
           <h1 className='intro-hero__title'>
-            Welcome to <span className='color-beta'>Goilerplate</span>
+            Welcome to <span className='color-beta'>Oovah</span>
           </h1>
           <div className='intro-hero__image'>
             <img
               src={welcomeImage}
-              alt='Welcome to Goilerplate'
+              alt='Welcome to Oovah'
               className='welcome-image'
             />
           </div>
