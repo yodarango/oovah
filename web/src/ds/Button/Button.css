@@ -12,8 +12,9 @@
 }
 
 .button-primary {
-  border: 1px solid rgb(0, 119, 255);
-  background-color: #0f395370;
+  border: 1px solid var(--dr-epsilon);
+  background-color: var(--dr-delta);
+  color: var(--dr-beta);
 }
 
 .button-secondary {

@@ -65,52 +65,56 @@ export const Layout = () => {
   return (
     <div className='translate-layout-56yl'>
       <div className='translate-layout-56yl__container bg-gamma rounded-3 p-4'>
-        <h2 className='text-center mb-4'>Translate</h2>
+        <h2 className='text-center mb-4'>Oovah</h2>
 
-        <LanguageSelector
-          label='From'
-          selected={source}
-          onSelect={setSource}
-        />
+        <section className="d-flex "> 
+          <div>
+            <LanguageSelector
+              label='From'
+              selected={source}
+              onSelect={setSource}
+            />
 
-        <div className='translate-layout-56yl__section mb-4'>
-          <TextArea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder='Type or paste text to translate...'
-            className='w-100'
-            rows={6}
-          />
-        </div>
+            <div className='translate-layout-56yl__section mb-4'>
+              <TextArea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder='Type or paste text to translate...'
+                className='w-100'
+                rows={6}
+              />
+            </div>
 
-        <LanguageSelector
-          label='To'
-          selected={target}
-          onSelect={setTarget}
-        />
+            <LanguageSelector
+              label='To'
+              selected={target}
+              onSelect={setTarget}
+            />
 
-        <div className='translate-layout-56yl__actions mb-4'>
-          <Button
-            primary
-            isLoading={loading}
-            onClick={handleTranslate}
-            className='w-100'
-          >
-            Translate
-          </Button>
-        </div>
-
-        <div className='translate-layout-56yl__section'>
-          <div className='translate-layout-56yl__output'>
-            {error ? (
-              <p className='color-danger'>{error}</p>
-            ) : translation ? (
-              <p>{translation}</p>
-            ) : (
-              <p className='opacity-50'>Translation will appear here...</p>
-            )}
+            <div className='translate-layout-56yl__actions mb-4'>
+              <Button
+                primary
+                isLoading={loading}
+                onClick={handleTranslate}
+                className='w-100'
+              >
+                Translate
+              </Button>
+            </div>
           </div>
-        </div>
+
+          <div className='translate-layout-56yl__section'>
+            <div className='translate-layout-56yl__output'>
+              {error ? (
+                <p className='color-danger'>{error}</p>
+              ) : translation ? (
+                <p>{translation}</p>
+              ) : (
+                <p className='opacity-50'>Translation will appear here...</p>
+              )}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

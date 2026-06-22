@@ -38,7 +38,7 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, instruction
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: fmt.Sprintf("Your job is to translate as accurately as possible the text sent by the user in %s to %s. In the first sentence translate %s but in a very consice text block below explain any nuances and provide examlpes of how to use them in a daily basis. Make sure the response is always plain text and never include other text that does not have to do with the translation, like offering further help or such. If the Target language is Spanish, always use the mexican dialect. For all others use the most standard version of it.", sourceLang, targetLang, text),
+					Content: fmt.Sprintf("Your job is to translate as accurately as possible the text sent by the user in %s to %s. In the first sentence translate %s but in a very consice text block below explain any nuances of %s and provide examlpes of how to use them in a daily basis. Make sure the response is always plain text and never include other text that does not have to do with the translation, like offering further help or such. If the Target language is Spanish, always use the mexican dialect. For all others use the most standard version of it.", sourceLang, targetLang, text, targetLang),
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,

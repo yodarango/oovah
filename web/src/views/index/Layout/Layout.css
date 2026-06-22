@@ -17,7 +17,7 @@
     0 8px 32px rgba(124, 58, 237, 0.1),
     0 2px 8px rgba(124, 58, 237, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  padding: 2rem;
+  padding: 1.6rem;
 }
 
 .translate-layout-56yl__container h2 {
@@ -27,7 +27,7 @@
 }
 
 .translate-language-selector__label {
-  font-size: 0.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
@@ -71,7 +71,7 @@
 }
 
 .translate-language-selector__flag-emoji {
-  font-size: 2rem;
+  font-size: 4rem;
   line-height: 1;
 }
 
@@ -96,4 +96,9 @@
 .translate-layout-56yl__switch {
   display: flex;
   align-items: center;
+}
+
+
+.translate-layout-56yl__action{
+
 }
