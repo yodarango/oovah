@@ -20,12 +20,16 @@ func NewTranslationService() *TranslationService {
 }
 
 // Translate sends text to OpenAI and returns the translated version.
-func (t *TranslationService) Translate(sourceLang, targetLang, text string) (string, error) {
+func (t *TranslationService) Translate(sourceLang, targetLang, text, instructions string) (string, error) {
 	if t.client == nil {
 		return "", fmt.Errorf("OPEN_AI is not configured")
 	}
 
-	prompt := fmt.Sprintf("Translate the following text from %s to %s. Only return the translated text, nothing else:\n\n%s", sourceLang, targetLang, text)
+	prompt := fmt.Sprintf("Your job :\n\n%s", sourceLang, targetLang, text)
+
+	if instructions != "" {
+		prompt = fmt.Sprintf("Translate the following text from %s to %s.\n\nAdditional instructions: %s\n\nText to translate:\n%s", sourceLang, targetLang, instructions, text)
+	}
 
 	resp, err := t.client.CreateChatCompletion(
 		context.Background(),
@@ -34,7 +38,7 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text string) (str
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: "You are a professional translator.",
+					Content: fmt.Sprintf("Your job is to translate as accurately as possible the text sent by the user in %s to %s. In the first sentence translate %s but in a very consice text block below explain any nuances and provide examlpes of how to use them in a daily basis. Make sure the response is always plain text and never include other text that does not have to do with the translation, like offering further help or such. If the Target language is Spanish, always use the mexican dialect. For all others use the most standard version of it.", sourceLang, targetLang, text),
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TextArea, Button } from "@ds";
+import { TextArea, Button, Switch } from "@ds";
 import { usePost } from "@utils";
 import { API_POST_TRANSLATE } from "@constants";
 
@@ -43,6 +43,8 @@ export const Layout = () => {
   const [target, setTarget] = useState("Spanish");
   const [text, setText] = useState("");
   const [translation, setTranslation] = useState("");
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [instructions, setInstructions] = useState("");
 
   const { post, loading, error } = usePost({
     url: API_POST_TRANSLATE,
@@ -59,7 +61,12 @@ export const Layout = () => {
       setTranslation(text);
       return;
     }
-    post({ source, target, text });
+    post({
+      source,
+      target,
+      text,
+      instructions: showInstructions ? instructions : "",
+    });
   };
 
   return (
@@ -82,6 +89,26 @@ export const Layout = () => {
             rows={6}
           />
         </div>
+
+        <div className="translate-layout-56yl__switch mb-4">
+          <Switch
+            checked={showInstructions}
+            onChange={() => setShowInstructions(!showInstructions)}
+            label="Add specific instructions for the translation"
+          />
+        </div>
+
+        {showInstructions && (
+          <div className="translate-layout-56yl__section mb-4">
+            <TextArea
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+              placeholder="E.g., Use formal tone, translate for business context, preserve technical terms..."
+              className="w-100"
+              rows={3}
+            />
+          </div>
+        )}
 
         <LanguageSelector
           label="To"
