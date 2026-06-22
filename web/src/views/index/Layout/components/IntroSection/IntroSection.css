@@ -1,0 +1,103 @@
+.intro-section-56yl {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 0;
+  animation: fadeInUp 0.8s ease-out;
+  container-type: inline-size;
+}
+
+/* Hero Section */
+.intro-hero {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 3rem 2rem;
+  border-radius: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.intro-hero__title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: var(--dr-alpha);
+  animation: slideInDown 1s ease-out;
+}
+
+.intro-hero__image {
+  margin: 2rem 0;
+  animation: bounceIn 1s ease-out 0.6s both;
+}
+
+.welcome-image {
+  max-width: 30rem;
+  width: 100%;
+  height: auto;
+  border-radius: 1rem;
+  transition: transform 0.3s ease;
+
+  @container (max-width: 40rem) {
+    max-width: 20rem;
+  }
+}
+
+.welcome-image:hover {
+  transform: scale(1.05) rotate(2deg);
+}
+
+/* CTA Section */
+.intro-cta {
+  border: 1px solid rgb(0, 119, 255);
+  background-color: #0f395370;
+  border-radius: 1rem;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.cta-button {
+  transition: transform 0.3s ease;
+}
+
+.cta-button:hover {
+  transform: translateY(-3px);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
