@@ -22,7 +22,8 @@ export const MainLayout = () => {
       state.isAuthenticated &&
       state.isPending
     ) {
-      return navigate(ROUTE_AUTH_VERIFY);
+      navigate(ROUTE_AUTH_VERIFY);
+      return;
     }
 
     // If the user is verified and tries to access auth pages, send them home
@@ -30,12 +31,14 @@ export const MainLayout = () => {
       [ROUTE_AUTH, ROUTE_AUTH_VERIFY].includes(location.pathname) &&
       state.isActive
     ) {
-      return navigate(ROUTE_HOME);
+      navigate(ROUTE_HOME);
+      return;
     }
 
     // If the user is not logged in but is trying to access the verification page
     if (location.pathname === ROUTE_AUTH_VERIFY && !state.isAuthenticated) {
-      return navigate(ROUTE_AUTH);
+      navigate(ROUTE_AUTH);
+      return;
     }
   }, [
     location,
