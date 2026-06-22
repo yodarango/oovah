@@ -6,7 +6,11 @@ import {
   RouterProvider,
   Route,
 } from "react-router-dom";
-import { ROUTE_AUTH_VERIFY, ROUTE_HOME, ROUTE_AUTH } from "@constants";
+import {
+  ROUTE_AUTH_VERIFY,
+  ROUTE_HOME,
+  ROUTE_AUTH,
+} from "@constants";
 
 // global styles
 import "@assets/tokens.css";

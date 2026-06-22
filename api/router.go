@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"oovah/constants"
+	"oovah/internal/lib"
 	"oovah/internal/models"
 	"oovah/internal/utils"
 	"os"
@@ -24,7 +25,7 @@ func Router () http.Handler {
 	mux.HandleFunc(constants.ROUTE_POST_VERIFY_EMAIL, VerifyEmail)
 	mux.HandleFunc(constants.ROUTE_POST_SIGNUP, Signup)
 	mux.HandleFunc(constants.ROUTE_POST_LOGIN, Login)
-
+	mux.HandleFunc(constants.ROUTE_POST_TRANSLATE, Translate)
 
 	// Serve static files from the frontend build
 	staticPath := os.Getenv("STATIC_PATH")
@@ -334,6 +335,53 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request){
 
 	httpResponse.Data = map[string]string{
 		"message": "Profile updated successfully",
+	}
+	httpResponse.Success = true
+	httpResponse.Error = nil
+	httpResponse.Send(w)
+}
+
+/************************************************************************
+* Translates text from one language to another using OpenAI.
+************************************************************************/
+func Translate(w http.ResponseWriter, r *http.Request) {
+	var httpResponse models.HttpResponse
+
+	var requestBody struct {
+		Source string `json:"source"`
+		Target string `json:"target"`
+		Text   string `json:"text"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		httpResponse.Error = "Invalid request format"
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	if requestBody.Source == "" || requestBody.Target == "" || requestBody.Text == "" {
+		httpResponse.Error = "source, target, and text are required"
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	service := lib.NewTranslationService()
+	translation, err := service.Translate(requestBody.Source, requestBody.Target, requestBody.Text)
+	if err != nil {
+		httpResponse.Error = fmt.Sprintf("%v", err)
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	httpResponse.Data = map[string]string{
+		"translation": translation,
 	}
 	httpResponse.Success = true
 	httpResponse.Error = nil
