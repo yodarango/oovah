@@ -25,6 +25,12 @@ func main (){
 		panic(err)
 	}
 
+	// run migrations
+	err = db.RunMigrations(conn)
+	if err != nil {
+		panic(err)
+	}
+
 	dbConfig := db.NewDBConnection(conn)
 	defer dbConfig.Conn.Close()
 	
