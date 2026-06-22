@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	_ "modernc.org/sqlite"
 )
 
 
@@ -21,24 +22,26 @@ func DBConnection() (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not read env file \n %w", err)
 	}
-	// db constants
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbUser := os.Getenv("DB_USER")
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbName := os.Getenv("DB_NAME")
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=UTC",
-		dbUser, dbPassword, dbHost, dbPort, dbName)
+	dbPath := os.Getenv("SQLITE_DB_PATH")
+	if dbPath == "" {
+		dbPath = "oovah.db"
+	}
 
-	db, err := sql.Open("mysql", dsn)
+	// Ensure the parent directory exists so SQLite can create the file
+	dir := filepath.Dir(dbPath)
+	if dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create database directory: \n %w", err)
+		}
+	}
 
-	// assicuarti che non avviano errori prima di continuare 
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start db: \n %w", err)
 	}
 
-	// Controlla che la DB sia funzionando 
+	// Verify the database is reachable
 	err = db.Ping()
 	if err != nil {
 		return nil, fmt.Errorf("unable to ping db: \n %w", err)

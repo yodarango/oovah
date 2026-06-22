@@ -10,7 +10,7 @@ COPY web/ ./
 RUN npm run build
 
 # Build stage for Go backend
-FROM golang:1.24-alpine AS backend-build
+FROM golang:1.25-alpine AS backend-build
 
 WORKDIR /app
 
@@ -24,9 +24,8 @@ COPY config/ ./config/
 COPY constants/ ./constants/
 COPY repo/ ./repo/
 COPY templates/ ./templates/
-COPY .env .
 
-RUN go build -o server ./cmd/main
+RUN CGO_ENABLED=0 go build -o server ./cmd/main
 
 # Final stage
 FROM alpine:latest
@@ -36,7 +35,6 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 COPY --from=backend-build /app/server .
-COPY --from=backend-build /app/.env .
 COPY --from=backend-build /app/templates ./templates
 COPY --from=frontend-build /app/web/dist ./web/dist
 

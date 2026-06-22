@@ -5,51 +5,13 @@ services:
     ports:
       - "8008:8008"
     environment:
-      - DB_HOST=oovah_mysql
-      - DB_PORT=3306
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
+      - SQLITE_DB_PATH=/app/oovah.db
       - STATIC_PATH=web/dist
-    depends_on:
-      oovah_mysql:
-        condition: service_healthy
     networks:
       - app-network
     volumes:
       - .:/app
 
-  oovah_mysql:
-    image: mysql:8.0
-    container_name: ${COMPOSE_MYSQL_CONTAINER_NAME}
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-    ports:
-      - "3307:3306"
-    networks:
-      - app-network
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p${MYSQL_ROOT_PASSWORD}",
-        ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-    volumes:
-      - mysql_data:/var/lib/mysql # Persistent storage for MySQL data
-
 networks:
   app-network:
     driver: bridge
-volumes:
-  mysql_data:
-    driver: local
