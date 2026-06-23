@@ -5,6 +5,14 @@ import { API_GET_CONVERSATION } from "@constants";
 // styles
 import "./Layout.css";
 
+const LANGUAGES = [
+  { code: "English", flag: "🇺🇸" },
+  { code: "Spanish", flag: "🇲🇽" },
+  { code: "Italian", flag: "🇮🇹" },
+  { code: "German", flag: "🇩🇪" },
+  { code: "Greek", flag: "🇬🇷" },
+];
+
 export const Layout = () => {
   const { id } = useParams();
 
@@ -59,11 +67,19 @@ export const Layout = () => {
   const lastAssistantMessage = [...messages]
     .reverse()
     .find((m) => m.role === "assistant");
+  const sourceFlag = conversation?.source
+    ? LANGUAGES.find((lang) => lang.code === conversation.source)?.flag
+    : null;
 
   return (
     <div className='translate-page-layout-56yl'>
       <div className='translate-page-layout-56yl__container'>
         <h1 className='translate-page-layout-56yl__text'>
+          {sourceFlag && (
+            <span className='translate-page-layout-56yl__flag'>
+              {sourceFlag}
+            </span>
+          )}
           {lastUserMessage ? lastUserMessage.content : "No text found."}
         </h1>
         <ion-icon

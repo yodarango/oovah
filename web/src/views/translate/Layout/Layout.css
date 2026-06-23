@@ -44,6 +44,11 @@
   font-size: 5rem;
 }
 
+.translate-page-layout-56yl__flag {
+  margin-right: 0.75rem;
+  font-size: 1em;
+}
+
 .translate-page-layout-56yl__empty {
   text-align: center;
   color: var(--dr-alpha);
