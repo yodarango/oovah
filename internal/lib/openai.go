@@ -33,7 +33,7 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, instruction
 	prompt := fmt.Sprintf("Translate the following text from %s to %s:\n\n%s", sourceLang, targetLang, text)
 
 	if instructions != "" {
-		prompt = fmt.Sprintf("Translate the following text from %s to %s.\n\nAdditional instructions: %s\n\nText to translate:\n%s", sourceLang, targetLang, instructions, text)
+		prompt = fmt.Sprintf("Translate the following text from %s to %s.\n\nAdditional instructions: %s\n\nText to translate:\n%s \n Make sure to respond in %s", sourceLang, targetLang, instructions, text, responseLang)
 	}
 
 	systemPrompt := fmt.Sprintf(`

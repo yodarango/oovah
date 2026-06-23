@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TextArea, Button, Switch } from "@ds";
+import { TextArea, Switch } from "@ds";
 import { usePost } from "@utils";
 import { API_POST_TRANSLATE } from "@constants";
 
@@ -81,15 +81,16 @@ export const Layout = () => {
     },
   });
 
-  const handleTranslate = () => {
+  const handleTranslateTo = (lang) => {
     if (!text.trim()) return;
-    if (source === target) {
+    handleTarget(lang);
+    if (source === lang) {
       setTranslation(text);
       return;
     }
     post({
       source,
-      target,
+      target: lang,
       text,
       responseIn,
       instructions: showInstructions ? instructions : "",
@@ -139,28 +140,31 @@ export const Layout = () => {
               </div>
             )}
 
-            <LanguageSelector
-              label="To"
-              selected={target}
-              onSelect={handleTarget}
-            />
+            <div className="translate-language-selector mb-4">
+              <p className="translate-language-selector__label">Translate to</p>
+              <div className="translate-language-selector__flags">
+                {LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    className={`translate-language-selector__flag translate-language-selector__flag--action ${
+                      target === lang.code && loading ? "translate-language-selector__flag--loading" : ""
+                    } ${target === lang.code && !loading ? "translate-language-selector__flag--active" : ""}`}
+                    onClick={() => handleTranslateTo(lang.code)}
+                    title={lang.name}
+                    disabled={loading}
+                  >
+                    <span className="translate-language-selector__flag-emoji">{lang.flag}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <LanguageSelector
               label="In"
               selected={responseIn}
               onSelect={handleResponseIn}
             />
-
-            <div className="translate-layout-56yl__actions mb-4">
-              <Button
-                primary
-                isLoading={loading}
-                onClick={handleTranslate}
-                className="w-100"
-              >
-                Translate
-              </Button>
-            </div>
           </div>
 
           <div className="translate-layout-56yl__right">

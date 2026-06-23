@@ -115,6 +115,20 @@
   display: none;
 }
 
+.translate-language-selector__flag--action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.translate-language-selector__flag--loading {
+  animation: flag-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes flag-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
 .translate-layout-56yl__output {
   flex: 1;
   min-height: 140px;
