@@ -20,7 +20,7 @@ func NewTranslationService() *TranslationService {
 }
 
 // Translate sends text to OpenAI and returns the translated version.
-func (t *TranslationService) Translate(sourceLang, targetLang, text, instructions, responseIn string) (string, error) {
+func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn string, isQuestion bool) (string, error) {
 	if t.client == nil {
 		return "", fmt.Errorf("OPEN_AI is not configured")
 	}
@@ -31,17 +31,26 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, instruction
 	}
 
 	prompt := fmt.Sprintf("Translate the following text from %s to %s:\n\n%s", sourceLang, targetLang, text)
-
-	if instructions != "" {
-		prompt = fmt.Sprintf("Translate the following text from %s to %s.\n\nAdditional instructions: %s\n\nText to translate:\n%s \n Make sure to respond in %s", sourceLang, targetLang, instructions, text, responseLang)
+	if isQuestion {
+		prompt = fmt.Sprintf("The user has a question about the following text from %s to %s. Answer the question in detail and use the translation as part of your answer when relevant.\n\n%s", sourceLang, targetLang, text)
 	}
 
-	systemPrompt := fmt.Sprintf(`
-	Your job is to translate as accurately as possible the text sent by the user from %s to %s. 
-	Write your entire response in %s. 
-	In the first sentence provide the translation, but in a very concise text block below explain any nuances and provide examples of how to use them in a daily basis. 
-	Make sure the response is always plain text and never include other text that does not have to do with the translation, like offering further help or speaking directly to the user. 
-	If the target language is Spanish, always use the mexican dialect. If it is Greek, use Koine Greek. Never modern Greek. For all others use the most standard version of it.`, sourceLang, targetLang, responseLang)
+	var systemPrompt string
+	if isQuestion {
+		systemPrompt = fmt.Sprintf(`
+		You are a helpful language assistant. The user is asking a question related to a text in %s and expects an answer in %s.
+		Write your entire response in %s.
+		Provide a detailed, helpful answer that addresses the question directly. You may include a translation or explanation of the original text when relevant.
+		Make sure the response is always plain text and never include unrelated text like offering further help or speaking directly to the user unless necessary.
+		If the target language is Spanish, always use the mexican dialect. If it is Greek, use Koine Greek. Never modern Greek. For all others use the most standard version of it.`, sourceLang, targetLang, responseLang)
+	} else {
+		systemPrompt = fmt.Sprintf(`
+		Your job is to translate as accurately as possible the text sent by the user from %s to %s.
+		Write your entire response in %s.
+		Respond with the translation only. Do not add explanations, examples, notes, or any other text.
+		Make sure the response is always plain text and never include other text that does not have to do with the translation, like offering further help or speaking directly to the user.
+		If the target language is Spanish, always use the mexican dialect. If it is Greek, use Koine Greek. Never modern Greek. For all others use the most standard version of it.`, sourceLang, targetLang, responseLang)
+	}
 
 	resp, err := t.client.CreateChatCompletion(
 		context.Background(),

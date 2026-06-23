@@ -33,21 +33,27 @@ const savePrefs = (patch) => {
 
 const LanguageSelector = ({ selected, onSelect, label }) => {
   return (
-    <div className="translate-language-selector">
-      {label && <p className="translate-language-selector__label">{label}</p>}
-      <div className="translate-language-selector__flags">
+    <div className='translate-language-selector'>
+      {label && <p className='translate-language-selector__label'>{label}</p>}
+      <div className='translate-language-selector__flags'>
         {LANGUAGES.map((lang) => (
           <button
             key={lang.code}
-            type="button"
+            type='button'
             className={`translate-language-selector__flag ${
-              selected === lang.code ? "translate-language-selector__flag--active" : ""
+              selected === lang.code
+                ? "translate-language-selector__flag--active"
+                : ""
             }`}
             onClick={() => onSelect(lang.code)}
             title={lang.name}
           >
-            <span className="translate-language-selector__flag-emoji">{lang.flag}</span>
-            <span className="translate-language-selector__flag-name">{lang.name}</span>
+            <span className='translate-language-selector__flag-emoji'>
+              {lang.flag}
+            </span>
+            <span className='translate-language-selector__flag-name'>
+              {lang.name}
+            </span>
           </button>
         ))}
       </div>
@@ -63,14 +69,24 @@ export const Layout = () => {
   const [responseIn, setResponseIn] = useState(prefs.responseIn || "English");
   const [text, setText] = useState("");
   const [translation, setTranslation] = useState("");
-  const [showInstructions, setShowInstructions] = useState(prefs.showInstructions || false);
-  const [instructions, setInstructions] = useState(prefs.instructions || "");
+  const [isQuestion, setIsQuestion] = useState(prefs.isQuestion || false);
 
-  const handleSource = (v) => { setSource(v); savePrefs({ source: v }); };
-  const handleTarget = (v) => { setTarget(v); savePrefs({ target: v }); };
-  const handleResponseIn = (v) => { setResponseIn(v); savePrefs({ responseIn: v }); };
-  const handleShowInstructions = (v) => { setShowInstructions(v); savePrefs({ showInstructions: v }); };
-  const handleInstructions = (v) => { setInstructions(v); savePrefs({ instructions: v }); };
+  const handleSource = (v) => {
+    setSource(v);
+    savePrefs({ source: v });
+  };
+  const handleTarget = (v) => {
+    setTarget(v);
+    savePrefs({ target: v });
+  };
+  const handleResponseIn = (v) => {
+    setResponseIn(v);
+    savePrefs({ responseIn: v });
+  };
+  const handleIsQuestion = (v) => {
+    setIsQuestion(v);
+    savePrefs({ isQuestion: v });
+  };
 
   const { post, loading, error } = usePost({
     url: API_POST_TRANSLATE,
@@ -93,88 +109,80 @@ export const Layout = () => {
       target: lang,
       text,
       responseIn,
-      instructions: showInstructions ? instructions : "",
+      isQuestion,
     });
   };
 
   return (
-    <div className="translate-layout-56yl">
-      <div className="translate-layout-56yl__container">
-        <h2 className="text-center mb-4">Translate</h2>
+    <div className='translate-layout-56yl'>
+      <div className='translate-layout-56yl__container'>
+        <h2 className='text-center mb-4'>Translate</h2>
 
-        <section className="translate-layout-56yl__body">
-          <div className="translate-layout-56yl__left">
+        <section className='translate-layout-56yl__body'>
+          <div className='translate-layout-56yl__left'>
             <LanguageSelector
-              label="From"
+              label='From'
               selected={source}
               onSelect={handleSource}
             />
 
-            <div className="translate-layout-56yl__section mb-4">
+            <div className='translate-layout-56yl__section mb-4'>
               <TextArea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Type or paste text to translate..."
-                className="w-100"
+                placeholder='Type or paste text to translate...'
+                className='w-100'
                 rows={6}
               />
             </div>
 
-            <div className="translate-layout-56yl__switch mb-4">
+            <div className='translate-layout-56yl__switch mb-4'>
               <Switch
-                checked={showInstructions}
-                onChange={() => handleShowInstructions(!showInstructions)}
-                label="Add specific instructions for the translation"
+                checked={isQuestion}
+                onChange={() => handleIsQuestion(!isQuestion)}
+                label='This is a question'
               />
             </div>
 
-            {showInstructions && (
-              <div className="translate-layout-56yl__section mb-4">
-                <TextArea
-                  value={instructions}
-                  onChange={(e) => handleInstructions(e.target.value)}
-                  placeholder="E.g., Use formal tone, translate for business context, preserve technical terms..."
-                  className="w-100"
-                  rows={3}
-                />
-              </div>
-            )}
-
-            <div className="translate-language-selector mb-4">
-              <p className="translate-language-selector__label">Translate to</p>
-              <div className="translate-language-selector__flags">
+            <div className='translate-language-selector mb-4'>
+              <p className='translate-language-selector__label'>Translate to</p>
+              <div className='translate-language-selector__flags'>
                 {LANGUAGES.map((lang) => (
                   <button
                     key={lang.code}
-                    type="button"
+                    type='button'
                     className={`translate-language-selector__flag translate-language-selector__flag--action ${
-                      target === lang.code && loading ? "translate-language-selector__flag--loading" : ""
+                      target === lang.code && loading
+                        ? "translate-language-selector__flag--loading"
+                        : ""
                     } ${target === lang.code && !loading ? "translate-language-selector__flag--active" : ""}`}
                     onClick={() => handleTranslateTo(lang.code)}
                     title={lang.name}
                     disabled={loading}
                   >
-                    <span className="translate-language-selector__flag-emoji">{lang.flag}</span>
+                    <span className='translate-language-selector__flag-emoji'>
+                      {lang.flag}
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
 
             <LanguageSelector
-              label="In"
+              label='In'
               selected={responseIn}
               onSelect={handleResponseIn}
             />
           </div>
 
-          <div className="translate-layout-56yl__right">
-            <div className="translate-layout-56yl__output">
+          <div className='translate-layout-56yl__right'>
+            <div className='translate-layout-56yl__output'>
               {error ? (
-                <p className="color-danger">{error}</p>
+                <p className='color-danger'>{error}</p>
               ) : translation ? (
                 <p>{translation}</p>
               ) : (
-                <p className="opacity-50">Translation will appear here...</p>
+                <p className='opacity-50'>Translation will appear here...</p>
               )}
             </div>
           </div>
