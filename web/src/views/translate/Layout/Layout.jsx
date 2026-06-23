@@ -48,10 +48,14 @@ export const Layout = () => {
   }
 
   if (error) {
-    return <p className='color-danger translate-page-layout-56yl__empty'>{error}</p>;
+    return (
+      <p className='color-danger translate-page-layout-56yl__empty'>{error}</p>
+    );
   }
 
-  const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+  const lastUserMessage = [...messages]
+    .reverse()
+    .find((m) => m.role === "user");
   const lastAssistantMessage = [...messages]
     .reverse()
     .find((m) => m.role === "assistant");
@@ -59,29 +63,18 @@ export const Layout = () => {
   return (
     <div className='translate-page-layout-56yl'>
       <div className='translate-page-layout-56yl__container'>
-        <div className='translate-page-layout-56yl__card'>
-          <p className='translate-page-layout-56yl__label'>Text</p>
-          <p className='translate-page-layout-56yl__text'>
-            {lastUserMessage ? lastUserMessage.content : "No text found."}
-          </p>
-        </div>
-
-        <div className='translate-page-layout-56yl__card'>
-          <p className='translate-page-layout-56yl__label'>Translation</p>
-          <p className='translate-page-layout-56yl__text'>
-            {lastAssistantMessage
-              ? lastAssistantMessage.content
-              : "No translation found."}
-          </p>
-        </div>
-
-        {conversation && (
-          <div className='translate-page-layout-56yl__meta'>
-            <span>{conversation.source || "Unknown"}</span>
-            <span>→</span>
-            <span>{conversation.target || "Unknown"}</span>
-          </div>
-        )}
+        <h1 className='translate-page-layout-56yl__text'>
+          {lastUserMessage ? lastUserMessage.content : "No text found."}
+        </h1>
+        <ion-icon
+          className='translate-page-layout-56yl__icon'
+          name='arrow-forward-outline'
+        ></ion-icon>
+        <h1 className='translate-page-layout-56yl__text'>
+          {lastAssistantMessage
+            ? lastAssistantMessage.content
+            : "No translation found."}
+        </h1>
       </div>
     </div>
   );

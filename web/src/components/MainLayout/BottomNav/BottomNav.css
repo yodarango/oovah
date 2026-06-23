@@ -1,6 +1,6 @@
 .bottom-nav-56yl {
   position: fixed;
-  bottom: 0;
+  bottom: 1rem;
   left: 0;
   right: 0;
   z-index: 50;
@@ -13,6 +13,10 @@
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(196, 181, 253, 0.3);
   box-shadow: 0 -2px 16px rgba(124, 58, 237, 0.08);
+  width: 90%;
+  margin: auto;
+  border-radius: 2rem;
+  border: 0.1rem solid var(--dr-delta);
 }
 
 .bottom-nav-56yl__item {
@@ -21,9 +25,11 @@
   align-items: center;
   gap: 0.25rem;
   text-decoration: none;
-  color: var(--dr-alpha);
+  color: var(--dr-delta);
   opacity: 0.6;
-  transition: opacity 0.2s ease, color 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease;
   padding: 0.5rem 1.5rem;
   border-radius: 1rem;
 }
@@ -40,10 +46,10 @@
 }
 
 .bottom-nav-56yl__item ion-icon {
-  font-size: 1.75rem;
+  font-size: 2.5rem;
 }
 
 .bottom-nav-56yl__label {
-  font-size: 0.75rem;
+  font-size: 1.4rem;
   font-weight: 600;
 }
