@@ -24,8 +24,11 @@ const loadPrefs = () => {
   }
 };
 
-const savePrefs = (prefs) => {
-  localStorage.setItem(LS_KEY, JSON.stringify(prefs));
+const savePrefs = (patch) => {
+  try {
+    const current = JSON.parse(localStorage.getItem(LS_KEY)) || {};
+    localStorage.setItem(LS_KEY, JSON.stringify({ ...current, ...patch }));
+  } catch {}
 };
 
 const LanguageSelector = ({ selected, onSelect, label }) => {
@@ -63,16 +66,11 @@ export const Layout = () => {
   const [showInstructions, setShowInstructions] = useState(prefs.showInstructions || false);
   const [instructions, setInstructions] = useState(prefs.instructions || "");
 
-  const persist = (patch) => {
-    const current = loadPrefs();
-    savePrefs({ ...current, ...patch });
-  };
-
-  const handleSource = (v) => { setSource(v); persist({ source: v }); };
-  const handleTarget = (v) => { setTarget(v); persist({ target: v }); };
-  const handleResponseIn = (v) => { setResponseIn(v); persist({ responseIn: v }); };
-  const handleShowInstructions = (v) => { setShowInstructions(v); persist({ showInstructions: v }); };
-  const handleInstructions = (v) => { setInstructions(v); persist({ instructions: v }); };
+  const handleSource = (v) => { setSource(v); savePrefs({ source: v }); };
+  const handleTarget = (v) => { setTarget(v); savePrefs({ target: v }); };
+  const handleResponseIn = (v) => { setResponseIn(v); savePrefs({ responseIn: v }); };
+  const handleShowInstructions = (v) => { setShowInstructions(v); savePrefs({ showInstructions: v }); };
+  const handleInstructions = (v) => { setInstructions(v); savePrefs({ instructions: v }); };
 
   const { post, loading, error } = usePost({
     url: API_POST_TRANSLATE,
@@ -101,7 +99,7 @@ export const Layout = () => {
   return (
     <div className="translate-layout-56yl">
       <div className="translate-layout-56yl__container">
-        <h2 className="text-center mb-4">OOVAH</h2>
+        <h2 className="text-center mb-4">Translate</h2>
 
         <section className="translate-layout-56yl__body">
           <div className="translate-layout-56yl__left">
