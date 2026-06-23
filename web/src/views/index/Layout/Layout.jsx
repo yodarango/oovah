@@ -40,6 +40,7 @@ export const Layout = () => {
   const [text, setText] = useState("");
   const [translation, setTranslation] = useState("");
   const [isQuestion, setIsQuestion] = useState(prefs.isQuestion || false);
+  const [questionData, setQuestionData] = useState(null);
 
   const handleSource = (v) => {
     setSource(v);
@@ -67,10 +68,57 @@ export const Layout = () => {
     savePrefs({ isQuestion: v });
   };
 
+  const parseQuestionResponse = (raw) => {
+    if (!raw) return null;
+
+    // Try standard JSON first
+    try {
+      return JSON.parse(raw);
+    } catch {
+      // continue
+    }
+
+    // Try unquoted-key object literal: {response: "...", has_corrections: true|false, corrections: "..."}
+    const match = raw.match(
+      /^\s*\{\s*response\s*:\s*("(?:\\.|[^"\\])*")\s*,\s*has_corrections\s*:\s*(true|false)\s*,\s*corrections\s*:\s*("(?:\\.|[^"\\])*")\s*\}\s*$/,
+    );
+    if (match) {
+      const parseString = (str) => {
+        try {
+          return JSON.parse(str);
+        } catch {
+          return str.slice(1, -1).replace(/\\"/g, '"');
+        }
+      };
+      return {
+        response: parseString(match[1]),
+        has_corrections: match[2] === "true",
+        corrections: parseString(match[3]),
+      };
+    }
+
+    return null;
+  };
+
   const { post, loading, error } = usePost({
     url: API_POST_TRANSLATE,
     callback: (data) => {
-      if (data && data.translation) {
+      if (!data || !data.translation) return;
+      if (isQuestion) {
+        const parsed = parseQuestionResponse(data.translation);
+        if (parsed) {
+          setQuestionData({
+            response: parsed.response || "",
+            hasCorrections: !!parsed.has_corrections,
+            corrections: parsed.corrections || "",
+          });
+          setTranslation(parsed.response || "");
+        } else {
+          setQuestionData(null);
+          setTranslation(data.translation);
+        }
+      } else {
+        setQuestionData(null);
         setTranslation(data.translation);
       }
     },
@@ -95,7 +143,7 @@ export const Layout = () => {
   return (
     <div className='translate-layout-56yl'>
       <div className='translate-layout-56yl__container'>
-        <h2 className='text-center mb-4'>Translate</h2>
+        <h2 className='text-center mb-4'>OOVAH</h2>
 
         <section className='translate-layout-56yl__body'>
           <div className='translate-layout-56yl__left'>
@@ -215,6 +263,35 @@ export const Layout = () => {
                 <p className='opacity-50'>Translation will appear here...</p>
               )}
             </div>
+
+            {isQuestion && questionData && (
+              <div className='translate-layout-56yl__corrections'>
+                <div className='translate-layout-56yl__corrections-header'>
+                  <ion-icon
+                    name={
+                      questionData.hasCorrections
+                        ? "close-circle"
+                        : "checkmark-circle"
+                    }
+                    class={`translate-layout-56yl__corrections-icon ${
+                      questionData.hasCorrections
+                        ? "translate-layout-56yl__corrections-icon--error"
+                        : "translate-layout-56yl__corrections-icon--success"
+                    }`}
+                  ></ion-icon>
+                  <span>
+                    {questionData.hasCorrections
+                      ? "Corrections needed"
+                      : "No corrections needed"}
+                  </span>
+                </div>
+                {questionData.hasCorrections && (
+                  <p className='translate-layout-56yl__corrections-text'>
+                    {questionData.corrections}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </section>
       </div>

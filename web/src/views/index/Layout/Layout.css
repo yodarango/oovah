@@ -156,3 +156,39 @@
   word-break: break-word;
   color: var(--dr-alpha);
 }
+
+.translate-layout-56yl__corrections {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--dr-alpha);
+}
+
+.translate-layout-56yl__corrections-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.translate-layout-56yl__corrections-icon {
+  font-size: 2rem;
+}
+
+.translate-layout-56yl__corrections-icon--error {
+  color: var(--dr-danger);
+}
+
+.translate-layout-56yl__corrections-icon--success {
+  color: var(--dr-success);
+}
+
+.translate-layout-56yl__corrections-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
