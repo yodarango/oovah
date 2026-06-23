@@ -14,6 +14,20 @@ const LANGUAGES = [
   { code: "Greek", flag: "🇬🇷", name: "Greek" },
 ];
 
+const LS_KEY = "translate_prefs";
+
+const loadPrefs = () => {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY)) || {};
+  } catch {
+    return {};
+  }
+};
+
+const savePrefs = (prefs) => {
+  localStorage.setItem(LS_KEY, JSON.stringify(prefs));
+};
+
 const LanguageSelector = ({ selected, onSelect, label }) => {
   return (
     <div className="translate-language-selector">
@@ -39,12 +53,26 @@ const LanguageSelector = ({ selected, onSelect, label }) => {
 };
 
 export const Layout = () => {
-  const [source, setSource] = useState("English");
-  const [target, setTarget] = useState("Spanish");
+  const prefs = loadPrefs();
+
+  const [source, setSource] = useState(prefs.source || "English");
+  const [target, setTarget] = useState(prefs.target || "Spanish");
+  const [responseIn, setResponseIn] = useState(prefs.responseIn || "English");
   const [text, setText] = useState("");
   const [translation, setTranslation] = useState("");
-  const [showInstructions, setShowInstructions] = useState(false);
-  const [instructions, setInstructions] = useState("");
+  const [showInstructions, setShowInstructions] = useState(prefs.showInstructions || false);
+  const [instructions, setInstructions] = useState(prefs.instructions || "");
+
+  const persist = (patch) => {
+    const current = loadPrefs();
+    savePrefs({ ...current, ...patch });
+  };
+
+  const handleSource = (v) => { setSource(v); persist({ source: v }); };
+  const handleTarget = (v) => { setTarget(v); persist({ target: v }); };
+  const handleResponseIn = (v) => { setResponseIn(v); persist({ responseIn: v }); };
+  const handleShowInstructions = (v) => { setShowInstructions(v); persist({ showInstructions: v }); };
+  const handleInstructions = (v) => { setInstructions(v); persist({ instructions: v }); };
 
   const { post, loading, error } = usePost({
     url: API_POST_TRANSLATE,
@@ -65,79 +93,90 @@ export const Layout = () => {
       source,
       target,
       text,
+      responseIn,
       instructions: showInstructions ? instructions : "",
     });
   };
 
   return (
     <div className="translate-layout-56yl">
-      <div className="translate-layout-56yl__container bg-gamma rounded-3 p-4">
-        <h2 className="text-center mb-4">Translate</h2>
+      <div className="translate-layout-56yl__container">
+        <h2 className="text-center mb-4">OOVAH</h2>
 
-        <LanguageSelector
-          label="From"
-          selected={source}
-          onSelect={setSource}
-        />
-
-        <div className="translate-layout-56yl__section mb-4">
-          <TextArea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Type or paste text to translate..."
-            className="w-100"
-            rows={6}
-          />
-        </div>
-
-        <div className="translate-layout-56yl__switch mb-4">
-          <Switch
-            checked={showInstructions}
-            onChange={() => setShowInstructions(!showInstructions)}
-            label="Add specific instructions for the translation"
-          />
-        </div>
-
-        {showInstructions && (
-          <div className="translate-layout-56yl__section mb-4">
-            <TextArea
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              placeholder="E.g., Use formal tone, translate for business context, preserve technical terms..."
-              className="w-100"
-              rows={3}
+        <section className="translate-layout-56yl__body">
+          <div className="translate-layout-56yl__left">
+            <LanguageSelector
+              label="From"
+              selected={source}
+              onSelect={handleSource}
             />
-          </div>
-        )}
 
-        <LanguageSelector
-          label="To"
-          selected={target}
-          onSelect={setTarget}
-        />
+            <div className="translate-layout-56yl__section mb-4">
+              <TextArea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Type or paste text to translate..."
+                className="w-100"
+                rows={6}
+              />
+            </div>
 
-        <div className="translate-layout-56yl__actions mb-4">
-          <Button
-            primary
-            isLoading={loading}
-            onClick={handleTranslate}
-            className="w-100"
-          >
-            Translate
-          </Button>
-        </div>
+            <div className="translate-layout-56yl__switch mb-4">
+              <Switch
+                checked={showInstructions}
+                onChange={() => handleShowInstructions(!showInstructions)}
+                label="Add specific instructions for the translation"
+              />
+            </div>
 
-        <div className="translate-layout-56yl__section">
-          <div className="translate-layout-56yl__output">
-            {error ? (
-              <p className="color-danger">{error}</p>
-            ) : translation ? (
-              <p>{translation}</p>
-            ) : (
-              <p className="opacity-50">Translation will appear here...</p>
+            {showInstructions && (
+              <div className="translate-layout-56yl__section mb-4">
+                <TextArea
+                  value={instructions}
+                  onChange={(e) => handleInstructions(e.target.value)}
+                  placeholder="E.g., Use formal tone, translate for business context, preserve technical terms..."
+                  className="w-100"
+                  rows={3}
+                />
+              </div>
             )}
+
+            <LanguageSelector
+              label="To"
+              selected={target}
+              onSelect={handleTarget}
+            />
+
+            <LanguageSelector
+              label="In"
+              selected={responseIn}
+              onSelect={handleResponseIn}
+            />
+
+            <div className="translate-layout-56yl__actions mb-4">
+              <Button
+                primary
+                isLoading={loading}
+                onClick={handleTranslate}
+                className="w-100"
+              >
+                Translate
+              </Button>
+            </div>
           </div>
-        </div>
+
+          <div className="translate-layout-56yl__right">
+            <div className="translate-layout-56yl__output">
+              {error ? (
+                <p className="color-danger">{error}</p>
+              ) : translation ? (
+                <p>{translation}</p>
+              ) : (
+                <p className="opacity-50">Translation will appear here...</p>
+              )}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

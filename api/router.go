@@ -352,6 +352,7 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 		Target       string `json:"target"`
 		Text         string `json:"text"`
 		Instructions string `json:"instructions"`
+		ResponseIn   string `json:"responseIn"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&requestBody)
@@ -372,7 +373,7 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	service := lib.NewTranslationService()
-	translation, err := service.Translate(requestBody.Source, requestBody.Target, requestBody.Text, requestBody.Instructions)
+	translation, err := service.Translate(requestBody.Source, requestBody.Target, requestBody.Text, requestBody.Instructions, requestBody.ResponseIn)
 	if err != nil {
 		httpResponse.Error = fmt.Sprintf("%v", err)
 		httpResponse.Success = false

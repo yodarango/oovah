@@ -67,8 +67,8 @@ export const Layout = () => {
       <div className='translate-layout-56yl__container bg-gamma rounded-3 p-4'>
         <h2 className='text-center mb-4'>Oovah</h2>
 
-        <section className="d-flex "> 
-          <div>
+        <section className='translate-layout-56yl__body'>
+          <div className='translate-layout-56yl__left'>
             <LanguageSelector
               label='From'
               selected={source}
@@ -103,7 +103,7 @@ export const Layout = () => {
             </div>
           </div>
 
-          <div className='translate-layout-56yl__section'>
+          <div className='translate-layout-56yl__right'>
             <div className='translate-layout-56yl__output'>
               {error ? (
                 <p className='color-danger'>{error}</p>

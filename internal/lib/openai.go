@@ -20,16 +20,23 @@ func NewTranslationService() *TranslationService {
 }
 
 // Translate sends text to OpenAI and returns the translated version.
-func (t *TranslationService) Translate(sourceLang, targetLang, text, instructions string) (string, error) {
+func (t *TranslationService) Translate(sourceLang, targetLang, text, instructions, responseIn string) (string, error) {
 	if t.client == nil {
 		return "", fmt.Errorf("OPEN_AI is not configured")
 	}
 
-	prompt := fmt.Sprintf("Your job :\n\n%s", sourceLang, targetLang, text)
+	responseLang := responseIn
+	if responseLang == "" {
+		responseLang = targetLang
+	}
+
+	prompt := fmt.Sprintf("Translate the following text from %s to %s:\n\n%s", sourceLang, targetLang, text)
 
 	if instructions != "" {
 		prompt = fmt.Sprintf("Translate the following text from %s to %s.\n\nAdditional instructions: %s\n\nText to translate:\n%s", sourceLang, targetLang, instructions, text)
 	}
+
+	systemPrompt := fmt.Sprintf("Your job is to translate as accurately as possible the text sent by the user from %s to %s. Write your entire response in %s. In the first sentence provide the translation, but in a very concise text block below explain any nuances and provide examples of how to use them in a daily basis. Make sure the response is always plain text and never include other text that does not have to do with the translation, like offering further help or such. If the target language is Spanish, always use the mexican dialect. For all others use the most standard version of it.", sourceLang, targetLang, responseLang)
 
 	resp, err := t.client.CreateChatCompletion(
 		context.Background(),
@@ -38,7 +45,7 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, instruction
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleSystem,
-					Content: fmt.Sprintf("Your job is to translate as accurately as possible the text sent by the user in %s to %s. In the first sentence translate %s but in a very consice text block below explain any nuances of %s and provide examlpes of how to use them in a daily basis. Make sure the response is always plain text and never include other text that does not have to do with the translation, like offering further help or such. If the Target language is Spanish, always use the mexican dialect. For all others use the most standard version of it.", sourceLang, targetLang, text, targetLang),
+					Content: systemPrompt,
 				},
 				{
 					Role:    openai.ChatMessageRoleUser,
