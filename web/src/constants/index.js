@@ -1,7 +1,7 @@
 export const ROUTE_HOME = "/";
 export const ROUTE_AUTH = "/auth";
 export const ROUTE_AUTH_VERIFY = "/auth/verify";
-export const ROUTE_CONVERSATION = "/:id";
+export const ROUTE_CONVERSATION = "/conversation/:id";
 export const ROUTE_TRANSLATE = "/translate";
 
 // api base

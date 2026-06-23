@@ -1,4 +1,4 @@
-import { IndexView, AuthView, AuthVerifyView } from "@views";
+import { IndexView, AuthView, AuthVerifyView, ConversationView } from "@views";
 import { MainLayout } from "@components";
 import {
   createRoutesFromElements,
@@ -21,7 +21,7 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path={""} element={<MainLayout />} errorElement={<></>}>
       <Route path={ROUTE_HOME} element={<IndexView />} />
-      <Route path={ROUTE_CONVERSATION} element={<IndexView />} />
+      <Route path={ROUTE_CONVERSATION} element={<ConversationView />} />
       <Route path={ROUTE_AUTH} element={<AuthView />} />
       <Route path={ROUTE_AUTH_VERIFY} element={<AuthVerifyView />} />
     </Route>,
