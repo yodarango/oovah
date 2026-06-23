@@ -163,6 +163,7 @@ export const Layout = () => {
                     }`}
                     onClick={() => handleSource(lang.code)}
                     title={lang.name}
+                    disabled={loading}
                   >
                     <span className='translate-language-selector__flag-emoji'>
                       {lang.flag}
@@ -204,13 +205,14 @@ export const Layout = () => {
                       key={lang.code}
                       type='button'
                       className={`translate-language-selector__flag translate-language-selector__flag--action ${
-                        target === lang.code && loading
-                          ? "translate-language-selector__flag--loading"
+                        target === lang.code
+                          ? "translate-language-selector__flag--active"
                           : ""
-                      } ${target === lang.code && !loading ? "translate-language-selector__flag--active" : ""}`}
+                      }`}
                       onClick={() => handleTranslateTo(lang.code)}
                       title={lang.name}
                       disabled={loading}
+                      isLoading={target === lang.code && loading}
                     >
                       <span className='translate-language-selector__flag-emoji'>
                         {lang.flag}
@@ -229,10 +231,6 @@ export const Layout = () => {
                     key={lang.code}
                     type='button'
                     className={`translate-language-selector__flag flag-primary ${
-                      isQuestion && responseIn === lang.code && loading
-                        ? "translate-language-selector__flag--loading"
-                        : ""
-                    } ${
                       responseIn === lang.code
                         ? "translate-language-selector__flag--active"
                         : ""
@@ -240,6 +238,9 @@ export const Layout = () => {
                     onClick={() => handleResponseIn(lang.code)}
                     title={lang.name}
                     disabled={loading}
+                    isLoading={
+                      isQuestion && responseIn === lang.code && loading
+                    }
                   >
                     <span className='translate-language-selector__flag-emoji'>
                       {lang.flag}
