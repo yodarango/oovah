@@ -121,14 +121,19 @@ func GetConversationById(id int) (*Conversation, error) {
 }
 
 // GetMessagesByConversationId returns only the messages for a conversation.
-// GetConversations retrieves a paginated list of conversations with message counts.
+// GetConversations retrieves a paginated list of conversations with message counts
+// and the first user and assistant messages for preview.
 func GetConversations(limit, offset int) ([]struct {
 	Conversation
-	MessageCount int `json:"message_count"`
+	MessageCount          int    `json:"message_count"`
+	FirstUserMessage      string `json:"first_user_message"`
+	FirstAssistantMessage string `json:"first_assistant_message"`
 }, int, error) {
 	query := `
 		SELECT c.id, c.type, c.source, c.target, c.response_in, c.created_at, c.updated_at,
-			COUNT(m.id) AS message_count
+			COUNT(m.id) AS message_count,
+			(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'user' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_user_message,
+			(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'assistant' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_assistant_message
 		FROM conversations c
 		LEFT JOIN messages m ON m.conversation_id = c.id
 		GROUP BY c.id
@@ -143,12 +148,16 @@ func GetConversations(limit, offset int) ([]struct {
 
 	var conversations []struct {
 		Conversation
-		MessageCount int `json:"message_count"`
+		MessageCount          int    `json:"message_count"`
+		FirstUserMessage      string `json:"first_user_message"`
+		FirstAssistantMessage string `json:"first_assistant_message"`
 	}
 	for rows.Next() {
 		var item struct {
 			Conversation
-			MessageCount int `json:"message_count"`
+			MessageCount          int    `json:"message_count"`
+			FirstUserMessage      string `json:"first_user_message"`
+			FirstAssistantMessage string `json:"first_assistant_message"`
 		}
 		err := rows.Scan(
 			&item.Id,
@@ -159,6 +168,8 @@ func GetConversations(limit, offset int) ([]struct {
 			&item.CreatedAt,
 			&item.UpdatedAt,
 			&item.MessageCount,
+			&item.FirstUserMessage,
+			&item.FirstAssistantMessage,
 		)
 		if err != nil {
 			return nil, 0, fmt.Errorf("could not scan conversation: %w", err)

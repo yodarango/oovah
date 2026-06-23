@@ -77,6 +77,32 @@
   font-size: 1.4rem;
 }
 
+.history-layout-56yl__preview {
+  color: var(--dr-alpha);
+  margin: 0 0 0.75rem 0;
+  font-size: 1.4rem;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.history-layout-56yl__preview-row {
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.history-layout-56yl__preview-row:last-child {
+  margin-bottom: 0;
+}
+
+.history-layout-56yl__flag {
+  flex-shrink: 0;
+  font-size: 1.2em;
+  line-height: 1.4;
+}
+
 .history-layout-56yl__count {
   color: var(--dr-alpha);
   opacity: 0.7;

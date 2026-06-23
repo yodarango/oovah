@@ -15,6 +15,17 @@ const formatDate = (dateString) => {
   });
 };
 
+const LANGUAGES = [
+  { code: "English", flag: "🇺🇸" },
+  { code: "Spanish", flag: "🇲🇽" },
+  { code: "Italian", flag: "🇮🇹" },
+  { code: "German", flag: "🇩🇪" },
+  { code: "Greek", flag: "🇬🇷" },
+];
+
+const getFlag = (code) =>
+  LANGUAGES.find((lang) => lang.code === code)?.flag || "";
+
 export const Layout = () => {
   const navigate = useNavigate();
   const [conversations, setConversations] = useState([]);
@@ -146,13 +157,31 @@ export const Layout = () => {
                 <p className='history-layout-56yl__date'>
                   {formatDate(conversation.created_at)}
                 </p>
+                {conversation.type === "question" ? (
+                  <p className='history-layout-56yl__preview'>
+                    <span className='history-layout-56yl__flag'>
+                      {getFlag(conversation.source)}
+                    </span>
+                    {conversation.first_user_message || "No message"}
+                  </p>
+                ) : (
+                  <div className='history-layout-56yl__preview'>
+                    <p className='history-layout-56yl__preview-row'>
+                      <span className='history-layout-56yl__flag'>
+                        {getFlag(conversation.source)}
+                      </span>
+                      {conversation.first_user_message || "No source text"}
+                    </p>
+                    <p className='history-layout-56yl__preview-row'>
+                      <span className='history-layout-56yl__flag'>
+                        {getFlag(conversation.target)}
+                      </span>
+                      {conversation.first_assistant_message || "No translation"}
+                    </p>
+                  </div>
+                )}
                 <p className='history-layout-56yl__count'>
                   {conversation.message_count || 0} messages
-                </p>
-                <p className='history-layout-56yl__type'>
-                  {conversation.type === "question"
-                    ? "Question"
-                    : "Translation"}
                 </p>
               </div>
               <div className='history-layout-56yl__card-actions'>
