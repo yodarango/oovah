@@ -5,7 +5,7 @@
 }
 
 .history-layout-56yl__container {
-  max-width: 60rem;
+  max-width: 160rem;
   margin: 0 auto;
 }
 
@@ -18,7 +18,7 @@
 
 .history-layout-56yl__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(35rem, 1fr));
   gap: 1rem;
 }
 

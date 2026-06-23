@@ -1,5 +1,5 @@
 .translate-layout-56yl {
-  max-width: 120rem;
+  max-width: 80rem;
   margin: 0 auto;
   padding: 2rem 1rem;
   container-type: inline-size;
@@ -41,7 +41,10 @@
     max-width: 100%;
   }
 
-  > div:nth-child(1) {
+  > div {
+    width: 100%;
+  }
+  /* > div:nth-child(1) {
     width: 100%;
     max-width: 40rem;
 
@@ -52,7 +55,7 @@
 
   > div:nth-child(2) {
     width: 100%;
-  }
+  } */
 }
 
 .translate-language-selector__label {

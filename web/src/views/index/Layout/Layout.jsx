@@ -396,7 +396,7 @@ export const Layout = () => {
             )}
           </div>
 
-          <div className='translate-layout-56yl__right'>
+          {/* <div className='translate-layout-56yl__right'>
             <div className='translate-layout-56yl__messages'>
               {error ? (
                 <p className='color-danger'>{error}</p>
@@ -445,7 +445,7 @@ export const Layout = () => {
                 ))
               ) : null}
             </div>
-          </div>
+          </div> */}
         </section>
       </div>
     </div>
