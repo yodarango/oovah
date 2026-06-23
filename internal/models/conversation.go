@@ -121,6 +121,64 @@ func GetConversationById(id int) (*Conversation, error) {
 }
 
 // GetMessagesByConversationId returns only the messages for a conversation.
+// GetConversations retrieves a paginated list of conversations with message counts.
+func GetConversations(limit, offset int) ([]struct {
+	Conversation
+	MessageCount int `json:"message_count"`
+}, int, error) {
+	query := `
+		SELECT c.id, c.type, c.source, c.target, c.response_in, c.created_at, c.updated_at,
+			COUNT(m.id) AS message_count
+		FROM conversations c
+		LEFT JOIN messages m ON m.conversation_id = c.id
+		GROUP BY c.id
+		ORDER BY c.updated_at DESC, c.id DESC
+		LIMIT ? OFFSET ?
+	`
+	rows, err := ModelsRepo.DB.Conn.Query(query, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("could not get conversations: %w", err)
+	}
+	defer rows.Close()
+
+	var conversations []struct {
+		Conversation
+		MessageCount int `json:"message_count"`
+	}
+	for rows.Next() {
+		var item struct {
+			Conversation
+			MessageCount int `json:"message_count"`
+		}
+		err := rows.Scan(
+			&item.Id,
+			&item.Type,
+			&item.Source,
+			&item.Target,
+			&item.ResponseIn,
+			&item.CreatedAt,
+			&item.UpdatedAt,
+			&item.MessageCount,
+		)
+		if err != nil {
+			return nil, 0, fmt.Errorf("could not scan conversation: %w", err)
+		}
+		conversations = append(conversations, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating conversations: %w", err)
+	}
+
+	var total int
+	err = ModelsRepo.DB.Conn.QueryRow("SELECT COUNT(*) FROM conversations").Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("could not count conversations: %w", err)
+	}
+
+	return conversations, total, nil
+}
+
 func GetMessagesByConversationId(id int) ([]Message, error) {
 	query := `
 		SELECT id, conversation_id, role, content, created_at

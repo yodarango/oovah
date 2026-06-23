@@ -10,6 +10,7 @@ const ROUTE_POST_CHANGE_PASSWORD = ROUTE_API_BASE + "/change-password"
 const ROUTE_POST_UPDATE_PROFILE = ROUTE_API_BASE + "/update-profile"
 const ROUTE_POST_TRANSLATE = ROUTE_API_BASE + "/translate"
 const ROUTE_GET_CONVERSATION = ROUTE_API_BASE + "/conversation/"
+const ROUTE_GET_CONVERSATIONS = ROUTE_API_BASE + "/conversations"
 
 // sample
 const ROUTE_GET_AUTH_SAMPLE = ROUTE_API_BASE + "/auth-sample"

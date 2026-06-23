@@ -1,0 +1,49 @@
+.bottom-nav-56yl {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(196, 181, 253, 0.3);
+  box-shadow: 0 -2px 16px rgba(124, 58, 237, 0.08);
+}
+
+.bottom-nav-56yl__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-decoration: none;
+  color: var(--dr-alpha);
+  opacity: 0.6;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  padding: 0.5rem 1.5rem;
+  border-radius: 1rem;
+}
+
+.bottom-nav-56yl__item:hover {
+  opacity: 0.8;
+  text-decoration: none;
+  color: var(--dr-alpha);
+}
+
+.bottom-nav-56yl__item--active {
+  opacity: 1;
+  color: var(--dr-delta);
+}
+
+.bottom-nav-56yl__item ion-icon {
+  font-size: 1.75rem;
+}
+
+.bottom-nav-56yl__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+}

@@ -1,4 +1,11 @@
-import { IndexView, AuthView, AuthVerifyView, ConversationView } from "@views";
+import {
+  IndexView,
+  AuthView,
+  AuthVerifyView,
+  ConversationView,
+  TranslationView,
+  HistoryView,
+} from "@views";
 import { MainLayout } from "@components";
 import {
   createRoutesFromElements,
@@ -11,6 +18,8 @@ import {
   ROUTE_HOME,
   ROUTE_AUTH,
   ROUTE_CONVERSATION,
+  ROUTE_TRANSLATION,
+  ROUTE_HISTORY,
 } from "@constants";
 
 // global styles
@@ -22,6 +31,8 @@ const router = createBrowserRouter(
     <Route path={""} element={<MainLayout />} errorElement={<></>}>
       <Route path={ROUTE_HOME} element={<IndexView />} />
       <Route path={ROUTE_CONVERSATION} element={<ConversationView />} />
+      <Route path={ROUTE_TRANSLATION} element={<TranslationView />} />
+      <Route path={ROUTE_HISTORY} element={<HistoryView />} />
       <Route path={ROUTE_AUTH} element={<AuthView />} />
       <Route path={ROUTE_AUTH_VERIFY} element={<AuthVerifyView />} />
     </Route>,

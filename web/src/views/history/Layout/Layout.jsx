@@ -1,0 +1,140 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { API_GET_CONVERSATIONS } from "@constants";
+
+// styles
+import "./Layout.css";
+
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+export const Layout = () => {
+  const navigate = useNavigate();
+  const [conversations, setConversations] = useState([]);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const observerTarget = useRef(null);
+
+  const fetchConversations = useCallback(async (currentOffset) => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_GET_CONVERSATIONS}?limit=20&offset=${currentOffset}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + localStorage.getItem("auth"),
+          },
+        },
+      );
+      const result = await response.json();
+      if (result.success && result.data) {
+        const newConversations = result.data.conversations || [];
+        const total = result.data.total || 0;
+        setConversations((prev) =>
+          currentOffset === 0
+            ? newConversations
+            : [...prev, ...newConversations],
+        );
+        const nextOffset = currentOffset + newConversations.length;
+        setOffset(nextOffset);
+        setHasMore(nextOffset < total);
+      } else if (result.error) {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError("Failed to load history.");
+    } finally {
+      setLoading(false);
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    fetchConversations(0);
+  }, []);
+
+  useEffect(() => {
+    const target = observerTarget.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          fetchConversations(offset);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [observerTarget, hasMore, loading, offset, fetchConversations]);
+
+  const handleCardClick = (conversation) => {
+    const path =
+      conversation.type === "question"
+        ? `/conversation/${conversation.id}`
+        : `/translation/${conversation.id}`;
+    navigate(path);
+  };
+
+  return (
+    <div className='history-layout-56yl'>
+      <div className='history-layout-56yl__container'>
+        <h2 className='history-layout-56yl__title'>History</h2>
+
+        {error && (
+          <p className='color-danger history-layout-56yl__empty'>{error}</p>
+        )}
+
+        {conversations.length === 0 && !loading && !error && (
+          <p className='history-layout-56yl__empty'>No conversations yet.</p>
+        )}
+
+        <div className='history-layout-56yl__grid'>
+          {conversations.map((conversation) => (
+            <div
+              className='history-layout-56yl__card'
+              key={conversation.id}
+              onClick={() => handleCardClick(conversation)}
+              role='button'
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  handleCardClick(conversation);
+                }
+              }}
+            >
+              <p className='history-layout-56yl__date'>
+                {formatDate(conversation.created_at)}
+              </p>
+              <p className='history-layout-56yl__count'>
+                {conversation.message_count || 0} messages
+              </p>
+              <p className='history-layout-56yl__type'>
+                {conversation.type === "question" ? "Question" : "Translation"}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div ref={observerTarget} className='history-layout-56yl__observer'>
+          {loading && <p className='history-layout-56yl__loading'>Loading...</p>}
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -183,7 +183,11 @@ export const Layout = () => {
       }
 
       if (data.conversationId && String(data.conversationId) !== id) {
-        navigate(`/conversation/${data.conversationId}`);
+        navigate(
+          isQuestion
+            ? `/conversation/${data.conversationId}`
+            : `/translation/${data.conversationId}`,
+        );
       }
     },
   });

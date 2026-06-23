@@ -29,6 +29,7 @@ func Router () http.Handler {
 	mux.HandleFunc(constants.ROUTE_POST_LOGIN, Login)
 	mux.HandleFunc(constants.ROUTE_POST_TRANSLATE, Translate)
 	mux.HandleFunc(constants.ROUTE_GET_CONVERSATION, GetConversation)
+	mux.HandleFunc(constants.ROUTE_GET_CONVERSATIONS, GetConversations)
 
 	// Serve static files from the frontend build
 	staticPath := os.Getenv("STATIC_PATH")
@@ -497,6 +498,52 @@ func GetConversation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpResponse.Data = conversation
+	httpResponse.Success = true
+	httpResponse.Error = nil
+	httpResponse.Send(w)
+}
+
+/************************************************************************
+* Retrieves a paginated list of conversations with message counts.
+************************************************************************/
+func GetConversations(w http.ResponseWriter, r *http.Request) {
+	var httpResponse models.HttpResponse
+
+	limitStr := r.URL.Query().Get("limit")
+	offsetStr := r.URL.Query().Get("offset")
+
+	limit := 20
+	offset := 0
+
+	if limitStr != "" {
+		parsedLimit, err := strconv.Atoi(limitStr)
+		if err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	if offsetStr != "" {
+		parsedOffset, err := strconv.Atoi(offsetStr)
+		if err == nil && parsedOffset >= 0 {
+			offset = parsedOffset
+		}
+	}
+
+	conversations, total, err := models.GetConversations(limit, offset)
+	if err != nil {
+		httpResponse.Error = fmt.Sprintf("%v", err)
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	httpResponse.Data = map[string]interface{}{
+		"conversations": conversations,
+		"total":         total,
+		"limit":         limit,
+		"offset":        offset,
+	}
 	httpResponse.Success = true
 	httpResponse.Error = nil
 	httpResponse.Send(w)

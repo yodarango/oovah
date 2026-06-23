@@ -2,6 +2,7 @@ import { useAppContext } from "../../views/context/appContextProvider";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Header } from "./Header/Header";
 import { Footer } from "./Footer/Footer";
+import { BottomNav } from "./BottomNav/BottomNav";
 import { ROUTE_AUTH_VERIFY, ROUTE_HOME, ROUTE_AUTH } from "@constants";
 
 // styles
@@ -56,6 +57,7 @@ export const MainLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <BottomNav />
     </div>
   );
 };
