@@ -52,6 +52,15 @@ export const Layout = () => {
   const handleResponseIn = (v) => {
     setResponseIn(v);
     savePrefs({ responseIn: v });
+    if (isQuestion && text.trim()) {
+      post({
+        source,
+        target: "",
+        text,
+        responseIn: v,
+        isQuestion: true,
+      });
+    }
   };
   const handleIsQuestion = (v) => {
     setIsQuestion(v);
@@ -80,17 +89,6 @@ export const Layout = () => {
       text,
       responseIn,
       isQuestion,
-    });
-  };
-
-  const handleAsk = () => {
-    if (!text.trim()) return;
-    post({
-      source,
-      target: "",
-      text,
-      responseIn,
-      isQuestion: true,
     });
   };
 
@@ -183,12 +181,17 @@ export const Layout = () => {
                     key={lang.code}
                     type='button'
                     className={`translate-language-selector__flag flag-primary ${
+                      isQuestion && responseIn === lang.code && loading
+                        ? "translate-language-selector__flag--loading"
+                        : ""
+                    } ${
                       responseIn === lang.code
                         ? "translate-language-selector__flag--active"
                         : ""
                     }`}
                     onClick={() => handleResponseIn(lang.code)}
                     title={lang.name}
+                    disabled={loading}
                   >
                     <span className='translate-language-selector__flag-emoji'>
                       {lang.flag}
@@ -200,20 +203,6 @@ export const Layout = () => {
                 ))}
               </div>
             </div>
-
-            {isQuestion && (
-              <div className='translate-layout-56yl__section mb-4'>
-                <Button
-                  primary
-                  className='w-100'
-                  onClick={handleAsk}
-                  disabled={loading}
-                  isLoading={loading}
-                >
-                  Ask
-                </Button>
-              </div>
-            )}
           </div>
 
           <div className='translate-layout-56yl__right'>
