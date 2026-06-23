@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TextArea, Switch } from "@ds";
+import { TextArea, Switch, Button } from "@ds";
 import { usePost } from "@utils";
 import { API_POST_TRANSLATE } from "@constants";
 
@@ -29,36 +29,6 @@ const savePrefs = (patch) => {
     const current = JSON.parse(localStorage.getItem(LS_KEY)) || {};
     localStorage.setItem(LS_KEY, JSON.stringify({ ...current, ...patch }));
   } catch {}
-};
-
-const LanguageSelector = ({ selected, onSelect, label }) => {
-  return (
-    <div className='translate-language-selector'>
-      {label && <p className='translate-language-selector__label'>{label}</p>}
-      <div className='translate-language-selector__flags'>
-        {LANGUAGES.map((lang) => (
-          <button
-            key={lang.code}
-            type='button'
-            className={`translate-language-selector__flag ${
-              selected === lang.code
-                ? "translate-language-selector__flag--active"
-                : ""
-            }`}
-            onClick={() => onSelect(lang.code)}
-            title={lang.name}
-          >
-            <span className='translate-language-selector__flag-emoji'>
-              {lang.flag}
-            </span>
-            <span className='translate-language-selector__flag-name'>
-              {lang.name}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 };
 
 export const Layout = () => {
@@ -120,11 +90,31 @@ export const Layout = () => {
 
         <section className='translate-layout-56yl__body'>
           <div className='translate-layout-56yl__left'>
-            <LanguageSelector
-              label='From'
-              selected={source}
-              onSelect={handleSource}
-            />
+            <div className='translate-language-selector'>
+              <p className='translate-language-selector__label'>From</p>
+              <div className='translate-language-selector__flags'>
+                {LANGUAGES.map((lang) => (
+                  <Button
+                    key={lang.code}
+                    type='button'
+                    className={`translate-language-selector__flag ${
+                      source === lang.code
+                        ? "translate-language-selector__flag--active"
+                        : ""
+                    }`}
+                    onClick={() => handleSource(lang.code)}
+                    title={lang.name}
+                  >
+                    <span className='translate-language-selector__flag-emoji'>
+                      {lang.flag}
+                    </span>
+                    <span className='translate-language-selector__flag-name'>
+                      {lang.name}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
 
             <div className='translate-layout-56yl__section mb-4'>
               <TextArea
@@ -146,9 +136,9 @@ export const Layout = () => {
 
             <div className='translate-language-selector mb-4'>
               <p className='translate-language-selector__label'>Translate to</p>
-              <div className='translate-language-selector__flags'>
+              <div className='translate-language-selector__flags translate-language-selector__flags--translate'>
                 {LANGUAGES.map((lang) => (
-                  <button
+                  <Button
                     key={lang.code}
                     type='button'
                     className={`translate-language-selector__flag translate-language-selector__flag--action ${
@@ -163,16 +153,36 @@ export const Layout = () => {
                     <span className='translate-language-selector__flag-emoji'>
                       {lang.flag}
                     </span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
 
-            <LanguageSelector
-              label='In'
-              selected={responseIn}
-              onSelect={handleResponseIn}
-            />
+            <div className='translate-language-selector'>
+              <p className='translate-language-selector__label'>In</p>
+              <div className='translate-language-selector__flags'>
+                {LANGUAGES.map((lang) => (
+                  <Button
+                    key={lang.code}
+                    type='button'
+                    className={`translate-language-selector__flag ${
+                      responseIn === lang.code
+                        ? "translate-language-selector__flag--active"
+                        : ""
+                    }`}
+                    onClick={() => handleResponseIn(lang.code)}
+                    title={lang.name}
+                  >
+                    <span className='translate-language-selector__flag-emoji'>
+                      {lang.flag}
+                    </span>
+                    <span className='translate-language-selector__flag-name'>
+                      {lang.name}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className='translate-layout-56yl__right'>
