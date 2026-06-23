@@ -25,11 +25,9 @@
   align-items: center;
   gap: 0.25rem;
   text-decoration: none;
-  color: var(--dr-delta);
-  opacity: 0.6;
-  transition:
-    opacity 0.2s ease,
-    color 0.2s ease;
+  color: rgb(181, 174, 186);
+  opacity: 1;
+  transition: color 0.2s ease;
   padding: 0.5rem 1.5rem;
   border-radius: 1rem;
 }

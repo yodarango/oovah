@@ -71,6 +71,10 @@ export const Layout = () => {
     ? LANGUAGES.find((lang) => lang.code === conversation.source)?.flag
     : null;
 
+  const targetFlag = conversation?.source
+    ? LANGUAGES.find((lang) => lang.code === conversation.target)?.flag
+    : null;
+
   return (
     <div className='translate-page-layout-56yl'>
       <div className='translate-page-layout-56yl__container'>
@@ -87,6 +91,11 @@ export const Layout = () => {
           name='arrow-forward-outline'
         ></ion-icon>
         <h1 className='translate-page-layout-56yl__text'>
+          {targetFlag && (
+            <span className='translate-page-layout-56yl__flag'>
+              {targetFlag}
+            </span>
+          )}
           {lastAssistantMessage
             ? lastAssistantMessage.content
             : "No translation found."}

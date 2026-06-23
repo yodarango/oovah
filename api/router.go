@@ -28,7 +28,7 @@ func Router () http.Handler {
 	mux.HandleFunc(constants.ROUTE_POST_SIGNUP, Signup)
 	mux.HandleFunc(constants.ROUTE_POST_LOGIN, Login)
 	mux.HandleFunc(constants.ROUTE_POST_TRANSLATE, Translate)
-	mux.HandleFunc(constants.ROUTE_GET_CONVERSATION, GetConversation)
+	mux.HandleFunc(constants.ROUTE_GET_CONVERSATION, ConversationHandler)
 	mux.HandleFunc(constants.ROUTE_GET_CONVERSATIONS, GetConversations)
 
 	// Serve static files from the frontend build
@@ -457,6 +457,59 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 		"translation":    translation,
 		"conversationId": conversationId,
 	}
+	httpResponse.Success = true
+	httpResponse.Error = nil
+	httpResponse.Send(w)
+}
+
+/************************************************************************
+* Dispatches GET and DELETE requests for a single conversation.
+************************************************************************/
+func ConversationHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodDelete:
+		DeleteConversation(w, r)
+	default:
+		GetConversation(w, r)
+	}
+}
+
+/************************************************************************
+* Deletes a conversation and all of its messages by ID.
+************************************************************************/
+func DeleteConversation(w http.ResponseWriter, r *http.Request) {
+	var httpResponse models.HttpResponse
+
+	idStr := strings.TrimPrefix(r.URL.Path, constants.ROUTE_DELETE_CONVERSATION)
+	idStr = strings.TrimSpace(idStr)
+
+	if idStr == "" {
+		httpResponse.Error = "conversation id is required"
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		httpResponse.Error = "invalid conversation id"
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	err = models.DeleteConversation(id)
+	if err != nil {
+		httpResponse.Error = fmt.Sprintf("%v", err)
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	httpResponse.Data = map[string]string{"message": "conversation deleted"}
 	httpResponse.Success = true
 	httpResponse.Error = nil
 	httpResponse.Send(w)

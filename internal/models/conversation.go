@@ -179,6 +179,21 @@ func GetConversations(limit, offset int) ([]struct {
 	return conversations, total, nil
 }
 
+// DeleteConversation removes a conversation and all of its messages.
+func DeleteConversation(id int) error {
+	_, err := ModelsRepo.DB.Conn.Exec("DELETE FROM messages WHERE conversation_id = ?", id)
+	if err != nil {
+		return fmt.Errorf("could not delete messages: %w", err)
+	}
+
+	_, err = ModelsRepo.DB.Conn.Exec("DELETE FROM conversations WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("could not delete conversation: %w", err)
+	}
+
+	return nil
+}
+
 func GetMessagesByConversationId(id int) ([]Message, error) {
 	query := `
 		SELECT id, conversation_id, role, content, created_at

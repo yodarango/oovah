@@ -38,10 +38,12 @@
   margin: 0;
   font-size: 4rem;
   line-height: 1.6;
+  text-align: center;
 }
 
 .translate-page-layout-56yl__icon {
   font-size: 5rem;
+  margin: auto;
 }
 
 .translate-page-layout-56yl__flag {

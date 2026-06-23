@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_GET_CONVERSATIONS } from "@constants";
+import { API_GET_CONVERSATIONS, API_DELETE_CONVERSATION } from "@constants";
 
 // styles
 import "./Layout.css";
@@ -24,40 +24,43 @@ export const Layout = () => {
   const [error, setError] = useState(null);
   const observerTarget = useRef(null);
 
-  const fetchConversations = useCallback(async (currentOffset) => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${API_GET_CONVERSATIONS}?limit=20&offset=${currentOffset}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + localStorage.getItem("auth"),
+  const fetchConversations = useCallback(
+    async (currentOffset) => {
+      if (loading) return;
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `${API_GET_CONVERSATIONS}?limit=20&offset=${currentOffset}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + localStorage.getItem("auth"),
+            },
           },
-        },
-      );
-      const result = await response.json();
-      if (result.success && result.data) {
-        const newConversations = result.data.conversations || [];
-        const total = result.data.total || 0;
-        setConversations((prev) =>
-          currentOffset === 0
-            ? newConversations
-            : [...prev, ...newConversations],
         );
-        const nextOffset = currentOffset + newConversations.length;
-        setOffset(nextOffset);
-        setHasMore(nextOffset < total);
-      } else if (result.error) {
-        setError(result.error);
+        const result = await response.json();
+        if (result.success && result.data) {
+          const newConversations = result.data.conversations || [];
+          const total = result.data.total || 0;
+          setConversations((prev) =>
+            currentOffset === 0
+              ? newConversations
+              : [...prev, ...newConversations],
+          );
+          const nextOffset = currentOffset + newConversations.length;
+          setOffset(nextOffset);
+          setHasMore(nextOffset < total);
+        } else if (result.error) {
+          setError(result.error);
+        }
+      } catch (err) {
+        setError("Failed to load history.");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError("Failed to load history.");
-    } finally {
-      setLoading(false);
-    }
-  }, [loading]);
+    },
+    [loading],
+  );
 
   useEffect(() => {
     fetchConversations(0);
@@ -91,6 +94,27 @@ export const Layout = () => {
     navigate(path);
   };
 
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(`${API_DELETE_CONVERSATION}${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("auth"),
+        },
+      });
+      const result = await response.json();
+      if (result.success) {
+        setConversations((prev) => prev.filter((c) => c.id !== id));
+      } else if (result.error) {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError("Failed to delete conversation.");
+    }
+  };
+
   return (
     <div className='history-layout-56yl'>
       <div className='history-layout-56yl__container'>
@@ -118,21 +142,35 @@ export const Layout = () => {
                 }
               }}
             >
-              <p className='history-layout-56yl__date'>
-                {formatDate(conversation.created_at)}
-              </p>
-              <p className='history-layout-56yl__count'>
-                {conversation.message_count || 0} messages
-              </p>
-              <p className='history-layout-56yl__type'>
-                {conversation.type === "question" ? "Question" : "Translation"}
-              </p>
+              <div className='history-layout-56yl__card-content'>
+                <p className='history-layout-56yl__date'>
+                  {formatDate(conversation.created_at)}
+                </p>
+                <p className='history-layout-56yl__count'>
+                  {conversation.message_count || 0} messages
+                </p>
+                <p className='history-layout-56yl__type'>
+                  {conversation.type === "question"
+                    ? "Question"
+                    : "Translation"}
+                </p>
+              </div>
+              <div className='history-layout-56yl__card-actions'>
+                <ion-icon
+                  className='history-layout-56yl__delete'
+                  name='trash-outline'
+                  onClick={(e) => handleDelete(e, conversation.id)}
+                  title='Delete'
+                ></ion-icon>
+              </div>
             </div>
           ))}
         </div>
 
         <div ref={observerTarget} className='history-layout-56yl__observer'>
-          {loading && <p className='history-layout-56yl__loading'>Loading...</p>}
+          {loading && (
+            <p className='history-layout-56yl__loading'>Loading...</p>
+          )}
         </div>
       </div>
     </div>

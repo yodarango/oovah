@@ -18,6 +18,7 @@ export const API_POST_CHANGE_PASSWORD = API_BASE + "/change-password";
 export const API_POST_UPDATE_PROFILE = API_BASE + "/update-profile";
 export const API_POST_TRANSLATE = API_BASE + "/translate";
 export const API_GET_CONVERSATION = API_BASE + "/conversation/";
+export const API_DELETE_CONVERSATION = API_BASE + "/conversation/";
 export const API_GET_CONVERSATIONS = API_BASE + "/conversations";
 
 // user statuses

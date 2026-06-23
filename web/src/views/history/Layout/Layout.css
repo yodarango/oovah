@@ -33,6 +33,31 @@
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.history-layout-56yl__card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-layout-56yl__card-actions {
+  display: flex;
+  align-items: center;
+}
+
+.history-layout-56yl__delete {
+  color: #ef4444;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.history-layout-56yl__delete:hover {
+  color: #dc2626;
 }
 
 .history-layout-56yl__card:hover {
