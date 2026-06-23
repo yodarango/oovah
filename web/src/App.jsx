@@ -10,6 +10,7 @@ import {
   ROUTE_AUTH_VERIFY,
   ROUTE_HOME,
   ROUTE_AUTH,
+  ROUTE_CONVERSATION,
 } from "@constants";
 
 // global styles
@@ -20,6 +21,7 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path={""} element={<MainLayout />} errorElement={<></>}>
       <Route path={ROUTE_HOME} element={<IndexView />} />
+      <Route path={ROUTE_CONVERSATION} element={<IndexView />} />
       <Route path={ROUTE_AUTH} element={<AuthView />} />
       <Route path={ROUTE_AUTH_VERIFY} element={<AuthVerifyView />} />
     </Route>,

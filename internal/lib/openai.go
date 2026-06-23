@@ -8,6 +8,12 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
+// Message represents a single message in a conversation.
+type Message struct {
+	Role    string
+	Content string
+}
+
 type TranslationService struct {
 	client *openai.Client
 }
@@ -20,7 +26,8 @@ func NewTranslationService() *TranslationService {
 }
 
 // Translate sends text to OpenAI and returns the translated version.
-func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn string, isQuestion bool) (string, error) {
+// Previous messages can be provided to maintain conversation context.
+func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn string, isQuestion bool, previousMessages []Message) (string, error) {
 	if t.client == nil {
 		return "", fmt.Errorf("OPEN_AI is not configured")
 	}
@@ -39,18 +46,18 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 
 	if isQuestion {
 		prompt = fmt.Sprintf(`
-		The user has written the following text about %s. 
-		It may be a question or a sentence they need help with. 
-		Respond as concisely as possible but without ommitting too much details. 
+		The user has written the following text about %s.
+		It may be a question or a sentence they need help with.
+		Respond as concisely as possible but without ommitting too much details.
 		They are interested in how this text is used in every day contexts and any nuances they might need to know about. \n\n%s`, sourceLang, text)
-	}else{
+	} else {
 		prompt = fmt.Sprintf("Translate the following text from %s to %s:\n\n%s. Make sure to respond in %s", sourceLang, targetLang, text, responseIn)
 	}
 
 	prompt = fmt.Sprintf("%s \n\n Make sure you respect the json format instructed in the system requirements.", prompt)
 
 	var systemPrompt string
-	
+
 	if isQuestion {
 		systemPrompt = fmt.Sprintf(`
 		You are a helpful language assistant. The user is asking about the %s alanguge but they expect the response in %s.
@@ -61,16 +68,16 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		Feel free to make the response and the corrections in the json object markdown text to emphasize important elements.
 		`, sourceLang, responseLang, sourceLang)
 
-		systemPrompt = fmt.Sprintf("%s \n\n The following instructions are critical. Make sure that you respect them. The response must be in the followng json format: " +
-		"{response: <translation>, has_corrections: <boolean>, corrections: <string>}", systemPrompt)
-		
+		systemPrompt = fmt.Sprintf("%s \n\n The following instructions are critical. Make sure that you respect them. The response must be in the followng json format: "+
+			"{response: <translation>, has_corrections: <boolean>, corrections: <string>}", systemPrompt)
+
 	} else {
 		systemPrompt = fmt.Sprintf(`
 		Your job is to translate as accurately as possible the text sent by the user from %s to %s.
 		Write your entire response in %s.
 		Respond with the translation only. Do not add explanations, examples, notes, or any other text.
 		Make sure that your response is always in plain text and never include other text that does not have to do with the translation, like offering further help or speaking directly to the user.`, sourceLang, targetLang, responseLang)
-	
+
 		if targetLang == "Spanish" {
 			systemPrompt = fmt.Sprintf("%s \n Use the mexican dialect. If %s is Greek, use Koine Greek. Never modern Greek. For all others use the most standard version of it.", systemPrompt)
 		}
@@ -79,20 +86,35 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 			systemPrompt = fmt.Sprintf("%s \n Use the Koine Greek. Do not use modern Greek.", systemPrompt)
 		}
 	}
+
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: systemPrompt,
+		},
+	}
+
+	for _, message := range previousMessages {
+		role := openai.ChatMessageRoleUser
+		if message.Role == "assistant" {
+			role = openai.ChatMessageRoleAssistant
+		}
+		messages = append(messages, openai.ChatCompletionMessage{
+			Role:    role,
+			Content: message.Content,
+		})
+	}
+
+	messages = append(messages, openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleUser,
+		Content: prompt,
+	})
+
 	resp, err := t.client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT4oMini,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleSystem,
-					Content: systemPrompt,
-				},
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: prompt,
-				},
-			},
+			Model:    openai.GPT4oMini,
+			Messages: messages,
 		},
 	)
 	if err != nil {

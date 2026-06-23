@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { TextArea, Switch, Button } from "@ds";
 import { usePost } from "@utils";
-import { API_POST_TRANSLATE } from "@constants";
+import { API_POST_TRANSLATE, API_GET_CONVERSATION } from "@constants";
 
 // styles
 import "./Layout.css";
@@ -31,8 +32,42 @@ const savePrefs = (patch) => {
   } catch {}
 };
 
+const parseQuestionResponse = (raw) => {
+  if (!raw) return null;
+
+  // Try standard JSON first
+  try {
+    return JSON.parse(raw);
+  } catch {
+    // continue
+  }
+
+  // Try unquoted-key object literal: {response: "...", has_corrections: true|false, corrections: "..."}
+  const match = raw.match(
+    /^\s*\{\s*response\s*:\s*("(?:\\.|[^"\\])*")\s*,\s*has_corrections\s*:\s*(true|false)\s*,\s*corrections\s*:\s*("(?:\\.|[^"\\])*")\s*\}\s*$/,
+  );
+  if (match) {
+    const parseString = (str) => {
+      try {
+        return JSON.parse(str);
+      } catch {
+        return str.slice(1, -1).replace(/\\"/g, '"');
+      }
+    };
+    return {
+      response: parseString(match[1]),
+      has_corrections: match[2] === "true",
+      corrections: parseString(match[3]),
+    };
+  }
+
+  return null;
+};
+
 export const Layout = () => {
   const prefs = loadPrefs();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   const [source, setSource] = useState(prefs.source || "English");
   const [target, setTarget] = useState(prefs.target || "Spanish");
@@ -41,6 +76,7 @@ export const Layout = () => {
   const [translation, setTranslation] = useState("");
   const [isQuestion, setIsQuestion] = useState(prefs.isQuestion || false);
   const [questionData, setQuestionData] = useState(null);
+  const [conversationLoading, setConversationLoading] = useState(false);
 
   const handleSource = (v) => {
     setSource(v);
@@ -60,44 +96,13 @@ export const Layout = () => {
         text,
         responseIn: v,
         isQuestion: true,
+        conversationId: id ? parseInt(id, 10) : 0,
       });
     }
   };
   const handleIsQuestion = (v) => {
     setIsQuestion(v);
     savePrefs({ isQuestion: v });
-  };
-
-  const parseQuestionResponse = (raw) => {
-    if (!raw) return null;
-
-    // Try standard JSON first
-    try {
-      return JSON.parse(raw);
-    } catch {
-      // continue
-    }
-
-    // Try unquoted-key object literal: {response: "...", has_corrections: true|false, corrections: "..."}
-    const match = raw.match(
-      /^\s*\{\s*response\s*:\s*("(?:\\.|[^"\\])*")\s*,\s*has_corrections\s*:\s*(true|false)\s*,\s*corrections\s*:\s*("(?:\\.|[^"\\])*")\s*\}\s*$/,
-    );
-    if (match) {
-      const parseString = (str) => {
-        try {
-          return JSON.parse(str);
-        } catch {
-          return str.slice(1, -1).replace(/\\"/g, '"');
-        }
-      };
-      return {
-        response: parseString(match[1]),
-        has_corrections: match[2] === "true",
-        corrections: parseString(match[3]),
-      };
-    }
-
-    return null;
   };
 
   const { post, loading, error } = usePost({
@@ -121,8 +126,73 @@ export const Layout = () => {
         setQuestionData(null);
         setTranslation(data.translation);
       }
+
+      if (data.conversationId && String(data.conversationId) !== id) {
+        navigate(`/${data.conversationId}`);
+      }
     },
   });
+
+  useEffect(() => {
+    if (!id) {
+      setConversationLoading(false);
+      return;
+    }
+
+    const fetchConversation = async () => {
+      setConversationLoading(true);
+      try {
+        const response = await fetch(`${API_GET_CONVERSATION}${id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + localStorage.getItem("auth"),
+          },
+        });
+        const result = await response.json();
+        if (result.success && result.data) {
+          const conversation = result.data;
+          const fallbackPrefs = loadPrefs();
+          setSource(conversation.source || fallbackPrefs.source || "English");
+          setTarget(conversation.target || fallbackPrefs.target || "Spanish");
+          setResponseIn(
+            conversation.response_in || fallbackPrefs.responseIn || "English",
+          );
+          setIsQuestion(conversation.type === "question");
+
+          const assistantMessages = (conversation.messages || []).filter(
+            (message) => message.role === "assistant",
+          );
+          if (assistantMessages.length > 0) {
+            const lastMessage =
+              assistantMessages[assistantMessages.length - 1].content;
+            if (conversation.type === "question") {
+              const parsed = parseQuestionResponse(lastMessage);
+              if (parsed) {
+                setQuestionData({
+                  response: parsed.response || "",
+                  hasCorrections: !!parsed.has_corrections,
+                  corrections: parsed.corrections || "",
+                });
+                setTranslation(parsed.response || "");
+              } else {
+                setQuestionData(null);
+                setTranslation(lastMessage);
+              }
+            } else {
+              setQuestionData(null);
+              setTranslation(lastMessage);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load conversation:", err);
+      } finally {
+        setConversationLoading(false);
+      }
+    };
+
+    fetchConversation();
+  }, [id]);
 
   const handleTranslateTo = (lang) => {
     if (!text.trim()) return;
@@ -137,6 +207,7 @@ export const Layout = () => {
       text,
       responseIn,
       isQuestion,
+      conversationId: id ? parseInt(id, 10) : 0,
     });
   };
 
@@ -163,7 +234,7 @@ export const Layout = () => {
                     }`}
                     onClick={() => handleSource(lang.code)}
                     title={lang.name}
-                    disabled={loading}
+                    disabled={loading || conversationLoading}
                   >
                     <span className='translate-language-selector__flag-emoji'>
                       {lang.flag}
@@ -183,6 +254,7 @@ export const Layout = () => {
                 placeholder='Type or paste text to translate...'
                 className='w-100'
                 rows={6}
+                disabled={loading || conversationLoading}
               />
             </div>
 
@@ -191,6 +263,7 @@ export const Layout = () => {
                 checked={isQuestion}
                 onChange={() => handleIsQuestion(!isQuestion)}
                 label='This is a question'
+                disabled={loading || conversationLoading}
               />
             </div>
 
@@ -211,7 +284,7 @@ export const Layout = () => {
                       }`}
                       onClick={() => handleTranslateTo(lang.code)}
                       title={lang.name}
-                      disabled={loading}
+                      disabled={loading || conversationLoading}
                       isLoading={target === lang.code && loading}
                     >
                       <span className='translate-language-selector__flag-emoji'>
@@ -237,7 +310,7 @@ export const Layout = () => {
                     }`}
                     onClick={() => handleResponseIn(lang.code)}
                     title={lang.name}
-                    disabled={loading}
+                    disabled={loading || conversationLoading}
                     isLoading={
                       isQuestion && responseIn === lang.code && loading
                     }

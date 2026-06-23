@@ -9,6 +9,7 @@ const ROUTE_POST_FORGOT_PASSWORD = ROUTE_API_BASE + "/forgot-password"
 const ROUTE_POST_CHANGE_PASSWORD = ROUTE_API_BASE + "/change-password"
 const ROUTE_POST_UPDATE_PROFILE = ROUTE_API_BASE + "/update-profile"
 const ROUTE_POST_TRANSLATE = ROUTE_API_BASE + "/translate"
+const ROUTE_GET_CONVERSATION = ROUTE_API_BASE + "/conversation/"
 
 // sample
 const ROUTE_GET_AUTH_SAMPLE = ROUTE_API_BASE + "/auth-sample"

@@ -9,6 +9,8 @@ import (
 	"oovah/internal/models"
 	"oovah/internal/utils"
 	"os"
+	"strconv"
+	"strings"
 )
 
 func Router () http.Handler {
@@ -26,6 +28,7 @@ func Router () http.Handler {
 	mux.HandleFunc(constants.ROUTE_POST_SIGNUP, Signup)
 	mux.HandleFunc(constants.ROUTE_POST_LOGIN, Login)
 	mux.HandleFunc(constants.ROUTE_POST_TRANSLATE, Translate)
+	mux.HandleFunc(constants.ROUTE_GET_CONVERSATION, GetConversation)
 
 	// Serve static files from the frontend build
 	staticPath := os.Getenv("STATIC_PATH")
@@ -348,11 +351,12 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 	var httpResponse models.HttpResponse
 
 	var requestBody struct {
-		Source       string `json:"source"`
-		Target       string `json:"target"`
-		Text         string `json:"text"`
-		ResponseIn   string `json:"responseIn"`
-		IsQuestion   bool   `json:"isQuestion"`
+		Source         string `json:"source"`
+		Target         string `json:"target"`
+		Text           string `json:"text"`
+		ResponseIn     string `json:"responseIn"`
+		IsQuestion     bool   `json:"isQuestion"`
+		ConversationId int    `json:"conversationId"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&requestBody)
@@ -380,8 +384,38 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service := lib.NewTranslationService()
-	translation, err := service.Translate(requestBody.Source, requestBody.Target, requestBody.Text, requestBody.ResponseIn, requestBody.IsQuestion)
+	conversationType := "translation"
+	if requestBody.IsQuestion {
+		conversationType = "question"
+	}
+
+	var conversationId int
+	var previousMessages []models.Message
+
+	if requestBody.ConversationId > 0 {
+		conversation, err := models.GetConversationById(requestBody.ConversationId)
+		if err != nil {
+			httpResponse.Error = fmt.Sprintf("%v", err)
+			httpResponse.Success = false
+			httpResponse.Data = nil
+			httpResponse.Send(w)
+			return
+		}
+		conversationId = conversation.Id
+		previousMessages = conversation.Messages
+	} else {
+		id, err := models.CreateConversation(conversationType, requestBody.Source, requestBody.Target, requestBody.ResponseIn)
+		if err != nil {
+			httpResponse.Error = fmt.Sprintf("%v", err)
+			httpResponse.Success = false
+			httpResponse.Data = nil
+			httpResponse.Send(w)
+			return
+		}
+		conversationId = id
+	}
+
+	err = models.AddMessage(conversationId, "user", requestBody.Text)
 	if err != nil {
 		httpResponse.Error = fmt.Sprintf("%v", err)
 		httpResponse.Success = false
@@ -390,9 +424,79 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpResponse.Data = map[string]string{
-		"translation": translation,
+	service := lib.NewTranslationService()
+
+	var libMessages []lib.Message
+	for _, message := range previousMessages {
+		libMessages = append(libMessages, lib.Message{
+			Role:    message.Role,
+			Content: message.Content,
+		})
 	}
+
+	translation, err := service.Translate(requestBody.Source, requestBody.Target, requestBody.Text, requestBody.ResponseIn, requestBody.IsQuestion, libMessages)
+	if err != nil {
+		httpResponse.Error = fmt.Sprintf("%v", err)
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	err = models.AddMessage(conversationId, "assistant", translation)
+	if err != nil {
+		httpResponse.Error = fmt.Sprintf("%v", err)
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	httpResponse.Data = map[string]interface{}{
+		"translation":    translation,
+		"conversationId": conversationId,
+	}
+	httpResponse.Success = true
+	httpResponse.Error = nil
+	httpResponse.Send(w)
+}
+
+/************************************************************************
+* Retrieves a conversation and its messages by ID.
+************************************************************************/
+func GetConversation(w http.ResponseWriter, r *http.Request) {
+	var httpResponse models.HttpResponse
+
+	idStr := strings.TrimPrefix(r.URL.Path, constants.ROUTE_GET_CONVERSATION)
+	idStr = strings.TrimSpace(idStr)
+
+	if idStr == "" {
+		httpResponse.Error = "conversation id is required"
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		httpResponse.Error = "invalid conversation id"
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	conversation, err := models.GetConversationById(id)
+	if err != nil {
+		httpResponse.Error = fmt.Sprintf("%v", err)
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	httpResponse.Data = conversation
 	httpResponse.Success = true
 	httpResponse.Error = nil
 	httpResponse.Send(w)
