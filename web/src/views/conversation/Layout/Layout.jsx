@@ -203,9 +203,7 @@ export const Layout = () => {
             {error}
           </p>
         ) : messages.length === 0 ? (
-          <p className='conversation-layout-56yl__empty'>
-            No messages yet.
-          </p>
+          <p className='conversation-layout-56yl__empty'>No messages yet.</p>
         ) : (
           messages.map((message, index) => (
             <div className='conversation-layout-56yl__message' key={index}>
@@ -267,6 +265,7 @@ export const Layout = () => {
           className='conversation-layout-56yl__button'
           onClick={handleSubmit}
           disabled={!text.trim() || !conversation}
+          primary
         >
           {buttonLabel}
         </Button>

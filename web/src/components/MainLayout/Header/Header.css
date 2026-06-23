@@ -2,11 +2,11 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  /* backdrop-filter: blur(20px); */
-  /* -webkit-backdrop-filter: blur(20px); */
-  /* background: rgba(255, 255, 255, 0.6); */
-  /* border-bottom: 1px solid rgba(196, 181, 253, 0.3);
-  box-shadow: 0 2px 16px rgba(124, 58, 237, 0.06); */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.6);
+  border-bottom: 1px solid rgba(196, 181, 253, 0.3);
+  box-shadow: 0 2px 16px rgba(124, 58, 237, 0.06);
   margin-bottom: 2rem;
 }
 
