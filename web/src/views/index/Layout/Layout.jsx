@@ -345,7 +345,7 @@ export const Layout = () => {
                     <Button
                       key={lang.code}
                       type='button'
-                      className={`translate-language-selector__flag translate-language-selector__flag--action ${
+                      className={`translate-language-selector__flag flag-primary ${
                         target === lang.code
                           ? "translate-language-selector__flag--active"
                           : ""
@@ -362,7 +362,7 @@ export const Layout = () => {
               </div>
             )}
 
-            {!(loading || conversationLoading) && (
+            {isQuestion && !(loading || conversationLoading) && (
               <div className='translate-language-selector'>
                 <p className='translate-language-selector__label'>In</p>
                 <div className='translate-language-selector__flags translate-language-selector__flags--translate'>
@@ -438,9 +438,7 @@ export const Layout = () => {
                     )}
                   </div>
                 ))
-              ) : (
-                <p className='opacity-50'>Translation will appear here...</p>
-              )}
+              ) : null}
             </div>
           </div>
         </section>
