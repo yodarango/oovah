@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { TextArea, Switch, Button } from "@ds";
+import { TextArea, Switch, Button, Loading } from "@ds";
 import { usePost } from "@utils";
 import { API_POST_TRANSLATE, API_GET_CONVERSATION } from "@constants";
 
@@ -280,6 +280,11 @@ export const Layout = () => {
 
   return (
     <div className='translate-layout-56yl'>
+      {loading && (
+        <div className='translate-layout-56yl__loading-overlay'>
+          <Loading size={80} color='var(--dr-delta)' />
+        </div>
+      )}
       <div className='translate-layout-56yl__container'>
         <h2 className='text-center mb-4'>OOVAH</h2>
 
