@@ -364,8 +364,16 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if requestBody.Source == "" || requestBody.Target == "" || requestBody.Text == "" {
-		httpResponse.Error = "source, target, and text are required"
+	if requestBody.Text == "" {
+		httpResponse.Error = "text is required"
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	if !requestBody.IsQuestion && (requestBody.Source == "" || requestBody.Target == "") {
+		httpResponse.Error = "source and target are required for translations"
 		httpResponse.Success = false
 		httpResponse.Data = nil
 		httpResponse.Send(w)

@@ -83,6 +83,17 @@ export const Layout = () => {
     });
   };
 
+  const handleAsk = () => {
+    if (!text.trim()) return;
+    post({
+      source,
+      target: "",
+      text,
+      responseIn,
+      isQuestion: true,
+    });
+  };
+
   return (
     <div className='translate-layout-56yl'>
       <div className='translate-layout-56yl__container'>
@@ -91,8 +102,10 @@ export const Layout = () => {
         <section className='translate-layout-56yl__body'>
           <div className='translate-layout-56yl__left'>
             <div className='translate-language-selector'>
-              <p className='translate-language-selector__label'>From</p>
-              <div className='translate-language-selector__flags'>
+              <p className='translate-language-selector__label'>
+                {isQuestion ? "ASK ABOUT" : "From"}
+              </p>
+              <div className='translate-language-selector__flags translate-language-selector__flags--translate'>
                 {LANGUAGES.map((lang) => (
                   <Button
                     key={lang.code}
@@ -134,38 +147,42 @@ export const Layout = () => {
               />
             </div>
 
-            <div className='translate-language-selector mb-4'>
-              <p className='translate-language-selector__label'>Translate to</p>
+            {!isQuestion && (
+              <div className='translate-language-selector mb-4'>
+                <p className='translate-language-selector__label'>
+                  Translate to
+                </p>
+                <div className='translate-language-selector__flags translate-language-selector__flags--translate'>
+                  {LANGUAGES.map((lang) => (
+                    <Button
+                      key={lang.code}
+                      type='button'
+                      className={`translate-language-selector__flag translate-language-selector__flag--action ${
+                        target === lang.code && loading
+                          ? "translate-language-selector__flag--loading"
+                          : ""
+                      } ${target === lang.code && !loading ? "translate-language-selector__flag--active" : ""}`}
+                      onClick={() => handleTranslateTo(lang.code)}
+                      title={lang.name}
+                      disabled={loading}
+                    >
+                      <span className='translate-language-selector__flag-emoji'>
+                        {lang.flag}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className='translate-language-selector'>
+              <p className='translate-language-selector__label'>In</p>
               <div className='translate-language-selector__flags translate-language-selector__flags--translate'>
                 {LANGUAGES.map((lang) => (
                   <Button
                     key={lang.code}
                     type='button'
-                    className={`translate-language-selector__flag translate-language-selector__flag--action ${
-                      target === lang.code && loading
-                        ? "translate-language-selector__flag--loading"
-                        : ""
-                    } ${target === lang.code && !loading ? "translate-language-selector__flag--active" : ""}`}
-                    onClick={() => handleTranslateTo(lang.code)}
-                    title={lang.name}
-                    disabled={loading}
-                  >
-                    <span className='translate-language-selector__flag-emoji'>
-                      {lang.flag}
-                    </span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className='translate-language-selector'>
-              <p className='translate-language-selector__label'>In</p>
-              <div className='translate-language-selector__flags'>
-                {LANGUAGES.map((lang) => (
-                  <Button
-                    key={lang.code}
-                    type='button'
-                    className={`translate-language-selector__flag ${
+                    className={`translate-language-selector__flag flag-primary ${
                       responseIn === lang.code
                         ? "translate-language-selector__flag--active"
                         : ""
@@ -183,6 +200,20 @@ export const Layout = () => {
                 ))}
               </div>
             </div>
+
+            {isQuestion && (
+              <div className='translate-layout-56yl__section mb-4'>
+                <Button
+                  primary
+                  className='w-100'
+                  onClick={handleAsk}
+                  disabled={loading}
+                  isLoading={loading}
+                >
+                  Ask
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className='translate-layout-56yl__right'>

@@ -97,6 +97,13 @@
   box-shadow: 0 2px 6px rgba(124, 58, 237, 0.06);
 }
 
+.translate-language-selector__flag.flag-primary {
+  background-color: var(--dr-delta);
+  &:hover {
+    background-color: var(--dr-delta);
+  }
+}
+
 .translate-language-selector__flag:hover {
   background: rgba(237, 232, 255, 0.7);
   border-color: rgba(124, 58, 237, 0.3);
