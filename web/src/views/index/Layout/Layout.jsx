@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { TextArea, Switch, Button, Loading } from "@ds";
 import { usePost } from "@utils";
+import { useAppContext } from "../../context/appContextProvider";
 import { API_POST_TRANSLATE, API_GET_CONVERSATION } from "@constants";
 
 // styles
@@ -104,6 +105,11 @@ export const Layout = () => {
   const prefs = loadPrefs();
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useAppContext();
+
+  const showErrorToast = (message) => {
+    showToast({ type: "danger", message, zIndex: 100 });
+  };
 
   const [source, setSource] = useState(prefs.source || "English");
   const [target, setTarget] = useState(prefs.target || "Spanish");
@@ -133,6 +139,10 @@ export const Layout = () => {
   const handleResponseIn = (v) => {
     setResponseIn(v);
     savePrefs({ responseIn: v });
+    if (isQuestion && !text.trim()) {
+      showErrorToast("Please enter a question first.");
+      return;
+    }
     if (isQuestion && text.trim()) {
       setMessages((prev) => [
         {
@@ -194,6 +204,7 @@ export const Layout = () => {
 
   useEffect(() => {
     if (error) {
+      showErrorToast(error);
       setMessages((prev) => {
         if (prev.length === 0 || !prev[0].loading) return prev;
         const updated = [...prev];
@@ -232,6 +243,7 @@ export const Layout = () => {
         }
       } catch (err) {
         console.error("Failed to load conversation:", err);
+        showErrorToast("Failed to load conversation.");
       } finally {
         setConversationLoading(false);
       }
@@ -241,7 +253,10 @@ export const Layout = () => {
   }, [id]);
 
   const handleTranslateTo = (lang) => {
-    if (!text.trim()) return;
+    if (!text.trim()) {
+      showErrorToast("Please enter some text to translate.");
+      return;
+    }
     handleTarget(lang);
     if (source === lang) {
       setMessages((prev) => [
