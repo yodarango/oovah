@@ -2,10 +2,6 @@
 
 source ~/.zshrc
 
-# Delete this line
-echo "Please set up deployment file before proceeding."
-exit 1
-
 # Check if a commit message was provided
 if [ "$#" -ne 1 ]; then
     echo "Please provide a commit message"
