@@ -2,14 +2,25 @@
 
 source ~/.zshrc
 
-# Check if a commit message was provided
-if [ "$#" -ne 1 ]; then
-    echo "Please provide a commit message"
+# Parse arguments: optional --reset flag followed by a commit message
+RESET=false
+COMMIT_MESSAGE=""
+
+if [ "$#" -eq 1 ]; then
+    COMMIT_MESSAGE="$1"
+elif [ "$#" -eq 2 ] && [ "$1" = "--reset" ]; then
+    RESET=true
+    COMMIT_MESSAGE="$2"
+else
+    echo "Usage: ./deploy.sh [--reset] \"commit message\""
     exit 1
 fi
 
-# The commit message is the first argument to the script
-COMMIT_MESSAGE="$1"
+# Build reset commands if needed (removes containers/images but keeps the DB bind mount)
+RESET_COMMANDS=""
+if [ "$RESET" = true ]; then
+    RESET_COMMANDS="docker compose down --rmi all; "
+fi
 
 # Add changes to the staging area
 # You can adjust this to add specific files or use other git add options
@@ -37,7 +48,7 @@ git pull; \
 echo '👍 pulled changes from git and reset to origin'; \
 echo 'Current directory: '; pwd; \
 echo '🏗️ Building docker now...';\
-docker compose down
+$RESET_COMMANDS \
 docker compose up -d --build; \
 echo '🚀🚀🚀 Deployment successful'"
 
