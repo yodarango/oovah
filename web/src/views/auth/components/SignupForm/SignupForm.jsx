@@ -1,15 +1,17 @@
 import { useAppContext } from "../../../context/appContextProvider";
 import { Input, Button, Modal, Thumbnail, IfElse, AvatarPicker } from "@ds";
 import React, { useState, useEffect } from "react";
-import { API_POST_SIGNUP } from "@constants";
+import { API_POST_SIGNUP, ROUTE_AUTH_VERIFY, ROUTE_HOME } from "@constants";
 import { usePost } from "@utils";
 import { avatars } from "@images";
+import { useNavigate } from "react-router-dom";
 
 // styles
 import "./SignupForm.css";
 
 export const SignupForm = () => {
-  const { showToast, setupAuth } = useAppContext();
+  const { showToast, setupAuth, state } = useAppContext();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -124,6 +126,17 @@ export const SignupForm = () => {
       });
     }
   }, [error]);
+
+  useEffect(() => {
+    if (!state.isAuthenticated) return;
+
+    if (state.isPending) {
+      navigate(ROUTE_AUTH_VERIFY, { replace: true });
+      return;
+    }
+
+    navigate(ROUTE_HOME, { replace: true });
+  }, [state.isAuthenticated, state.isPending, navigate]);
 
   return (
     <form onSubmit={handleSubmit} className='signup-form-hd4l'>

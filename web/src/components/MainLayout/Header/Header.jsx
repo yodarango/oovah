@@ -12,7 +12,7 @@ export const Header = () => {
         <div className='app-header-56yl__container'>
           <Link to={ROUTE_HOME} className='app-header-56yl__brand'>
             <div className='app-header-56yl__logo'>
-              <img src='/logo.jpg' alt='Oovah Logo' className='logo' />
+              <img src='/logo.webp' alt='Oovah Logo' className='logo' />
             </div>
             <span className='app-header-56yl__title'>Oovah</span>
           </Link>

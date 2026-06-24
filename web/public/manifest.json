@@ -12,48 +12,48 @@
   "categories": ["category one", "category two", "category three"],
   "icons": [
     {
-      "src": "/logo.jpg",
+      "src": "/logo.webp",
       "sizes": "192x192",
       "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/oovah_splash.jpg",
+      "src": "/oovah_splash.webp",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/logo.webp",
       "sizes": "144x144",
       "type": "image/jpeg"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/logo.webp",
       "sizes": "96x96",
       "type": "image/jpeg"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/logo.webp",
       "sizes": "72x72",
       "type": "image/jpeg"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/logo.webp",
       "sizes": "48x48",
       "type": "image/jpeg"
     }
   ],
   "screenshots": [
     {
-      "src": "/oovah_splash.jpg",
+      "src": "/oovah_splash.webp",
       "sizes": "1280x720",
       "type": "image/jpeg",
       "form_factor": "wide",
       "label": "Oovah Dashboard"
     },
     {
-      "src": "/oovah_splash.jpg",
+      "src": "/oovah_splash.webp",
       "sizes": "750x1334",
       "type": "image/jpeg",
       "form_factor": "narrow",
@@ -68,7 +68,7 @@
       "url": "/",
       "icons": [
         {
-          "src": "/logo.jpg",
+          "src": "/logo.webp",
           "sizes": "96x96"
         }
       ]

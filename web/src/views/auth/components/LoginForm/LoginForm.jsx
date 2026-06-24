@@ -1,15 +1,17 @@
 import { useAppContext } from "../../../context/appContextProvider";
 import { ForgotPassword } from "../ForogotPassword/ForogotPassword";
 import React, { useState, useEffect } from "react";
-import { API_POST_LOGIN } from "@constants";
+import { API_POST_LOGIN, ROUTE_AUTH_VERIFY, ROUTE_HOME } from "@constants";
 import { Input, Button, Modal } from "@ds";
 import { usePost } from "@utils";
+import { useNavigate } from "react-router-dom";
 
 // styles
 import "./LoginForm.css";
 
 export const LoginForm = () => {
-  const { showToast, setupAuth } = useAppContext();
+  const { showToast, setupAuth, state } = useAppContext();
+  const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -64,6 +66,17 @@ export const LoginForm = () => {
       });
     }
   }, [error]);
+
+  useEffect(() => {
+    if (!state.isAuthenticated) return;
+
+    if (state.isPending) {
+      navigate(ROUTE_AUTH_VERIFY, { replace: true });
+      return;
+    }
+
+    navigate(ROUTE_HOME, { replace: true });
+  }, [state.isAuthenticated, state.isPending, navigate]);
 
   return (
     <form onSubmit={handleSubmit} className='login-form-38jr'>
