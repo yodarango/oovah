@@ -106,7 +106,7 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 
 	if isQuestion {
 		prompt = fmt.Sprintf(`
-		In have the following question about the %s language that I need help with.
+		I have the following question about the %s language that I need help with.
 		Make sure to respond in %s.
 		Respond as concisely as possible but without ommitting too much details.
 		I am interested in how this text is used in every day contexts and any nuances they might need to know about. Following is my question: %s`, sourceLang, responseIn, text)
@@ -124,7 +124,8 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		They are learning %s so please make sure to provide examples and details that will help them better understand this question but without being too verbose.
 		It is possible that the user finds themselves in front of a receptionist at a hotel or in a means of transportation and they need a concise answer that they can skim through quickly.
 		If the user has typed the request in any language other than Spanish or English, inspect the text for grammar or syntax errors and respond with the corrections after you have answered the request.
-		If the user has typed the request in any language other than Spanish, know that that is not their native tongue and they are students of it.
+		If the user has typed the request in any language other than Spanish or English, know that that is not their native tongue and they are students of it.
+		Do not provide corrections for requests that are written in English nor Spanish.
 		The following instructions are critical. You must always respond with a single valid JSON object and nothing else. The JSON must use this exact structure:
 		{"response": "<answer to the question>", "has_corrections": <true or false>, "corrections": "<corrections or empty string>"}
 		Do not wrap the JSON in markdown code blocks, do not add any explanation text before or after the JSON, and do not use any other format.
