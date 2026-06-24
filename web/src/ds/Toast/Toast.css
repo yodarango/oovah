@@ -11,29 +11,29 @@
   top: 5rem;
 
   &.toast-success {
-    border: 1px solid rgb(0, 255, 195);
-    background-color: #132d30;
-    color: var(--dr-alpha);
+    border: 1px solid #132d30;
+    background-color: #7ff989;
+    color: #132d30;
   }
   &.toast-danger {
-    border: 1px solid rgb(255, 0, 0);
-    background-color: #301313;
-    color: var(--dr-alpha);
+    border: 1px solid rgb(99, 8, 8);
+    background-color: #f37070;
+    color: rgb(99, 8, 8);
   }
   &.toast-warning {
-    border: 1px solid rgb(255, 234, 0);
-    background-color: #302d13;
-    color: var(--dr-alpha);
+    border: 1px solid rgb(39, 36, 6);
+    background-color: #fdf28b;
+    color: rgb(39, 36, 6);
   }
   &.toast-info {
-    border: 1px solid rgb(0, 119, 255);
-    background-color: #131e30;
-    color: var(--dr-alpha);
+    border: 1px solid rgb(13, 43, 78);
+    background-color: #93b9f7;
+    color: rgb(13, 43, 78);
   }
   &.toast-default {
-    border: 1px solid rgb(19, 14, 33);
-    background-color: #131e30;
-    color: var(--dr-alpha);
+    border: 1px solid rgb(75, 14, 104);
+    background-color: #d699ff;
+    color: rgb(13, 43, 78);
   }
 
   ion-icon {

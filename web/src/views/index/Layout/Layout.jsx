@@ -301,8 +301,6 @@ export const Layout = () => {
         </div>
       )}
       <div className='translate-layout-56yl__container'>
-        <h2 className='text-center mb-4'>OOVAH</h2>
-
         <section className='translate-layout-56yl__body'>
           <div className='translate-layout-56yl__left'>
             {!(loading || conversationLoading) && (
