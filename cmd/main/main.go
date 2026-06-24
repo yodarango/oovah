@@ -50,7 +50,7 @@ func main (){
 
 	// inizialize the server
 	server := &http.Server{
-		Addr: ":8008",
+		Addr: ":8012",
 		Handler: api.Router(),
 		MaxHeaderBytes: 5 << 20 ,
 
