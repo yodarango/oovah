@@ -2,8 +2,12 @@ package lib
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -16,6 +20,63 @@ type Message struct {
 
 type TranslationService struct {
 	client *openai.Client
+}
+
+type questionResponse struct {
+	Response     string `json:"response"`
+	HasCorrections bool   `json:"has_corrections"`
+	Corrections  string `json:"corrections"`
+}
+
+// NormalizeQuestionResponse takes a raw assistant response and returns a valid
+// JSON string in the expected {response, has_corrections, corrections} shape.
+// It handles markdown code fences, standard JSON, non-standard object literals,
+// and plain text.
+func NormalizeQuestionResponse(raw string) string {
+	cleaned := strings.TrimSpace(raw)
+
+	// Strip markdown code fences (```json ... ```)
+	cleaned = regexp.MustCompile("(?s)^```(?:json)?\\s*").ReplaceAllString(cleaned, "")
+	cleaned = regexp.MustCompile("(?s)\\s*```$").ReplaceAllString(cleaned, "")
+	cleaned = strings.TrimSpace(cleaned)
+
+	var parsed questionResponse
+
+	// Try standard JSON
+	if err := json.Unmarshal([]byte(cleaned), &parsed); err == nil {
+		out, _ := json.Marshal(parsed)
+		return string(out)
+	}
+
+	// Try non-standard object literal: {response: "...", has_corrections: true|false, corrections: "..."}
+	literalRegex := regexp.MustCompile(`^\s*\{\s*response\s*:\s*("(?:\\.|[^"\\])*")\s*,\s*has_corrections\s*:\s*(true|false)\s*,\s*corrections\s*:\s*("(?:\\.|[^"\\])*")\s*\}\s*$`)
+	if match := literalRegex.FindStringSubmatch(cleaned); match != nil {
+		parseString := func(s string) string {
+			if unquoted, err := strconv.Unquote(s); err == nil {
+				return unquoted
+			}
+			// Fallback: strip surrounding quotes and unescape
+			s = strings.TrimPrefix(s, "\"")
+			s = strings.TrimSuffix(s, "\"")
+			return strings.ReplaceAll(s, `\\"`, `"`)
+		}
+		parsed = questionResponse{
+			Response:     parseString(match[1]),
+			HasCorrections: match[2] == "true",
+			Corrections:  parseString(match[3]),
+		}
+		out, _ := json.Marshal(parsed)
+		return string(out)
+	}
+
+	// Fallback: treat the entire raw response as the answer with no corrections
+	parsed = questionResponse{
+		Response:     cleaned,
+		HasCorrections: false,
+		Corrections:  "",
+	}
+	out, _ := json.Marshal(parsed)
+	return string(out)
 }
 
 func NewTranslationService() *TranslationService {
@@ -59,13 +120,14 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 
 	if isQuestion {
 		systemPrompt = fmt.Sprintf(`
-		You are a helpful language assistant. The user is asking about the %s alanguge but they expect the response in %s.
-		They are learning %s so please make sure to priovide examples and details that will help them better understand this question but without being too verbose.
-		It is possible that the user finds themselves infront of a receptionist at hotel or in a means of transportation and they need a consice answer that they can skim through quickly.
-		If the user has typed the request in any language other than Spanish or English, inspect the text for grammar or syntax errors and resond with the corrections after you have answered the request.
+		You are a helpful language assistant. The user is asking about the %s language but they expect the response in %s.
+		They are learning %s so please make sure to provide examples and details that will help them better understand this question but without being too verbose.
+		It is possible that the user finds themselves in front of a receptionist at a hotel or in a means of transportation and they need a concise answer that they can skim through quickly.
+		If the user has typed the request in any language other than Spanish or English, inspect the text for grammar or syntax errors and respond with the corrections after you have answered the request.
 		If the user has typed the request in any language other than Spanish, know that that is not their native tongue and they are students of it.
-		The following instructions are critical. Make sure that you respect them. The response must be in the followng json format: "
-		"{response: <translation>, has_corrections: <boolean>, corrections: <string>}. Feel free to make the response and the corrections in the json object markdown text to emphasize important elements.
+		The following instructions are critical. You must always respond with a single valid JSON object and nothing else. The JSON must use this exact structure:
+		{"response": "<answer to the question>", "has_corrections": <true or false>, "corrections": "<corrections or empty string>"}
+		Do not wrap the JSON in markdown code blocks, do not add any explanation text before or after the JSON, and do not use any other format.
 		`, sourceLang, responseIn, sourceLang)
 
 	} else {
@@ -122,5 +184,10 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		return "", fmt.Errorf("no translation returned")
 	}
 
-	return resp.Choices[0].Message.Content, nil
+	content := resp.Choices[0].Message.Content
+	if isQuestion {
+		content = NormalizeQuestionResponse(content)
+	}
+
+	return content, nil
 }
