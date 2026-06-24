@@ -46,10 +46,9 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 
 	if isQuestion {
 		prompt = fmt.Sprintf(`
-		The user has written the following text about %s.
-		It may be a question or a sentence they need help with.
+		In have the following question about the %s language that I need help with.
 		Respond as concisely as possible but without ommitting too much details.
-		They are interested in how this text is used in every day contexts and any nuances they might need to know about. \n\n%s`, sourceLang, text)
+		I am interested in how this text is used in every day contexts and any nuances they might need to know about. Following is my question: \n\n%s`, sourceLang, text)
 	} else {
 		prompt = fmt.Sprintf("Translate the following text from %s to %s:\n\n%s. Make sure to respond in %s", sourceLang, targetLang, text, responseIn)
 	}

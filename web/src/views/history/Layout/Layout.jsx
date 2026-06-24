@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../../context/appContextProvider";
 import { API_GET_CONVERSATIONS, API_DELETE_CONVERSATION } from "@constants";
 
 // styles
@@ -28,6 +29,12 @@ const getFlag = (code) =>
 
 export const Layout = () => {
   const navigate = useNavigate();
+  const { showToast } = useAppContext();
+
+  const showErrorToast = (message) => {
+    showToast({ type: "danger", message, zIndex: 100 });
+  };
+
   const [conversations, setConversations] = useState([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -63,9 +70,13 @@ export const Layout = () => {
           setHasMore(nextOffset < total);
         } else if (result.error) {
           setError(result.error);
+          showErrorToast(result.error);
+          setHasMore(false);
         }
       } catch (err) {
         setError("Failed to load history.");
+        showErrorToast("Failed to load history.");
+        setHasMore(false);
       } finally {
         setLoading(false);
       }
@@ -83,7 +94,7 @@ export const Layout = () => {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
+        if (entries[0].isIntersecting && hasMore && !loading && !error) {
           fetchConversations(offset);
         }
       },
@@ -95,7 +106,7 @@ export const Layout = () => {
     return () => {
       observer.disconnect();
     };
-  }, [observerTarget, hasMore, loading, offset, fetchConversations]);
+  }, [observerTarget, hasMore, loading, offset, fetchConversations, error]);
 
   const handleCardClick = (conversation) => {
     const path =
@@ -120,9 +131,11 @@ export const Layout = () => {
         setConversations((prev) => prev.filter((c) => c.id !== id));
       } else if (result.error) {
         setError(result.error);
+        showErrorToast(result.error);
       }
     } catch (err) {
       setError("Failed to delete conversation.");
+      showErrorToast("Failed to delete conversation.");
     }
   };
 
