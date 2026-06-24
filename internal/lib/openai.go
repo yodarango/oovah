@@ -32,14 +32,13 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		return "", fmt.Errorf("OPEN_AI is not configured")
 	}
 
-	responseLang := responseIn
 
-	if responseLang == "" {
-		responseLang = targetLang
+	if responseIn == "" {
+		responseIn = targetLang
 	}
 
-	if responseLang == "" {
-		responseLang = "Italian"
+	if responseIn == "" {
+		responseIn = "Italian"
 	}
 
 	var prompt string
@@ -47,10 +46,11 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 	if isQuestion {
 		prompt = fmt.Sprintf(`
 		In have the following question about the %s language that I need help with.
+		Make sure to respond in %s.
 		Respond as concisely as possible but without ommitting too much details.
-		I am interested in how this text is used in every day contexts and any nuances they might need to know about. Following is my question: \n\n%s`, sourceLang, text)
+		I am interested in how this text is used in every day contexts and any nuances they might need to know about. Following is my question: %s`, sourceLang, responseIn, text)
 	} else {
-		prompt = fmt.Sprintf("Translate the following text from %s to %s:\n\n%s. Make sure to respond in %s", sourceLang, targetLang, text, responseIn)
+		prompt = fmt.Sprintf("Translate the following text from %s to %s:\n\n%s. Make sure to respond in %s. \n\n Do not tell me anything else other than the translation.", sourceLang, targetLang, text, responseIn)
 	}
 
 	prompt = fmt.Sprintf("%s \n\n Make sure you respect the json format instructed in the system requirements.", prompt)
@@ -64,21 +64,19 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		It is possible that the user finds themselves infront of a receptionist at hotel or in a means of transportation and they need a consice answer that they can skim through quickly.
 		If the user has typed the request in any language other than Spanish or English, inspect the text for grammar or syntax errors and resond with the corrections after you have answered the request.
 		If the user has typed the request in any language other than Spanish, know that that is not their native tongue and they are students of it.
-		Feel free to make the response and the corrections in the json object markdown text to emphasize important elements.
-		`, sourceLang, responseLang, sourceLang)
-
-		systemPrompt = fmt.Sprintf("%s \n\n The following instructions are critical. Make sure that you respect them. The response must be in the followng json format: "+
-			"{response: <translation>, has_corrections: <boolean>, corrections: <string>}", systemPrompt)
+		The following instructions are critical. Make sure that you respect them. The response must be in the followng json format: "
+		"{response: <translation>, has_corrections: <boolean>, corrections: <string>}. Feel free to make the response and the corrections in the json object markdown text to emphasize important elements.
+		`, sourceLang, responseIn, sourceLang)
 
 	} else {
 		systemPrompt = fmt.Sprintf(`
 		Your job is to translate as accurately as possible the text sent by the user from %s to %s.
-		Write your entire response in %s.
 		Respond with the translation only. Do not add explanations, examples, notes, or any other text.
-		Make sure that your response is always in plain text and never include other text that does not have to do with the translation, like offering further help or speaking directly to the user.`, sourceLang, targetLang, responseLang)
+		Make sure that your response is always in plain text and never include other text that does not have to do with the translation, like offering further help or speaking directly to the user.
+		If the word has more than more than one meaning, then provide them separated by comme in the order of frequency.`, sourceLang, targetLang)
 
 		if targetLang == "Spanish" {
-			systemPrompt = fmt.Sprintf("%s \n Use the mexican dialect. If %s is Greek, use Koine Greek. Never modern Greek. For all others use the most standard version of it.", systemPrompt)
+			systemPrompt = fmt.Sprintf("%s \n Use the mexican dialect. ", systemPrompt)
 		}
 
 		if targetLang == "Greek" {
