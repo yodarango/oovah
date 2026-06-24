@@ -31,7 +31,7 @@ fi
 
 # Copy the files to the VPS
 ssh_main "\
-cd /var/www/repos/where?; \
+cd /var/www/repos/oovah; \
 git reset --hard origin/main; \
 git pull; \
 echo '👍 pulled changes from git and reset to origin'; \
