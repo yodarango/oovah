@@ -7,9 +7,8 @@ import "./BottomNav.css";
 export const BottomNav = () => {
   const location = useLocation();
 
-  const isHome =
-    location.pathname === ROUTE_HOME || location.pathname === "/";
-  const isHistory = location.pathname === ROUTE_HISTORY;
+  const isHome = location.pathname === ROUTE_HOME || location.pathname === "/";
+  const isHistory = !isHome;
 
   return (
     <nav className='bottom-nav-56yl'>
