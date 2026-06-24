@@ -18,10 +18,8 @@
 }
 
 .button-secondary {
-  background-color: rgba(var(--dr-alpha-rgb), 0.3);
-  color: var(--dr-alpha);
-  backdrop-filter: blur(10px);
-  border: 0.1rem solid var(--dr-alpha);
+  background-color: #464649;
+  color: var(--dr-beta);
 }
 
 .button-danger {
@@ -35,13 +33,11 @@
 }
 
 .button-success {
-  border: 1px solid rgb(0, 255, 195);
-  background-color: #0f534370;
+  background-color: #64e087;
 }
 
 .button-default {
-  border: 1px solid rgb(0, 119, 255);
-  background-color: #0f395370;
+  background-color: #fbc5f6;
 }
 
 .button:hover {

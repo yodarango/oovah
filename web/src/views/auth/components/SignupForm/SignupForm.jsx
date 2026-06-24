@@ -265,7 +265,7 @@ export const SignupForm = () => {
         </IfElse>
       </div>
 
-      <Button type='submit' success isLoading={loading} className='w-100'>
+      <Button type='submit' default isLoading={loading} className='w-100 mb-4'>
         Create Account
       </Button>
 

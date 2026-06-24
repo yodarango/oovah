@@ -5,7 +5,7 @@
   border-radius: 1em;
   outline: none;
   width: 100%;
-  border: none;
+  border: 0.1rem solid var(--dr-delta);
 }
 
 .custom-input.textarea {
@@ -22,7 +22,9 @@
 }
 
 .custom-input.shine-on-focus:focus {
-  box-shadow: 0 0 5px var(--dr-delta), -5px 0 20px var(--dr-delta),
+  box-shadow:
+    0 0 5px var(--dr-delta),
+    -5px 0 20px var(--dr-delta),
     5px 0 20px var(--dr-delta);
 }
 
@@ -36,6 +38,8 @@
 }
 
 .custom-input.shine-on-focus.danger:focus {
-  box-shadow: 0 0 5px var(--dr-danger), -5px 0 20px var(--dr-danger),
+  box-shadow:
+    0 0 5px var(--dr-danger),
+    -5px 0 20px var(--dr-danger),
     5px 0 20px var(--dr-danger);
 }
