@@ -13,7 +13,7 @@ export const AppContextProvider = (props) => {
     setState((prevState) =>
       update(prevState, {
         isModalOpen: { $set: !prevState.isModalOpen },
-      })
+      }),
     );
   }
 
@@ -21,36 +21,55 @@ export const AppContextProvider = (props) => {
   function setupAuth() {
     const token = localStorage.getItem("auth");
 
-    if (token) {
-      const userData = getUserFromToken();
-
-      if (userData) {
-        setState((prevState) =>
-          update(prevState, {
-            isPending: {
-              $set:
-                userData.status === USER_STATUS_PENDING &&
-                userData.status !== USER_STATUS_ACTIVE,
-            },
-            isActive: {
-              $set:
-                userData.status === USER_STATUS_ACTIVE &&
-                userData.status !== USER_STATUS_PENDING,
-            },
-            isAuthenticated: { $set: true },
-            isLoading: { $set: false },
-            user: { $set: userData },
-            auth: { $set: token },
-          })
-        );
-      }
+    if (!token) {
+      setState((prevState) =>
+        update(prevState, {
+          isAuthenticated: { $set: false },
+          isLoading: { $set: false },
+        }),
+      );
+      return;
     }
+
+    const userData = getUserFromToken();
+
+    if (!userData || !userData.id) {
+      localStorage.removeItem("auth");
+      setState((prevState) =>
+        update(prevState, {
+          isAuthenticated: { $set: false },
+          isLoading: { $set: false },
+          user: { $set: {} },
+          auth: { $set: {} },
+        }),
+      );
+      return;
+    }
+
+    setState((prevState) =>
+      update(prevState, {
+        isPending: {
+          $set:
+            userData.status === USER_STATUS_PENDING &&
+            userData.status !== USER_STATUS_ACTIVE,
+        },
+        isActive: {
+          $set:
+            userData.status === USER_STATUS_ACTIVE &&
+            userData.status !== USER_STATUS_PENDING,
+        },
+        isAuthenticated: { $set: true },
+        isLoading: { $set: false },
+        user: { $set: userData },
+        auth: { $set: token },
+      }),
+    );
   }
 
   // Function to decode JWT token and get user data
   function getUserFromToken() {
     const token = localStorage.getItem("auth");
-    if (!token) return {};
+    if (!token) return null;
 
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
@@ -64,7 +83,7 @@ export const AppContextProvider = (props) => {
       };
     } catch (error) {
       console.error("Error decoding token:", error);
-      return {};
+      return null;
     }
   }
 
@@ -76,7 +95,7 @@ export const AppContextProvider = (props) => {
         isAuthenticated: { $set: false },
         auth: { $set: {} },
         user: { $set: {} },
-      })
+      }),
     );
   }
 
@@ -85,7 +104,7 @@ export const AppContextProvider = (props) => {
     setState((prevState) =>
       update(prevState, {
         toast: { $set: toast },
-      })
+      }),
     );
   }
 
@@ -94,7 +113,7 @@ export const AppContextProvider = (props) => {
     setState((prevState) =>
       update(prevState, {
         toast: { $set: null },
-      })
+      }),
     );
   }
 

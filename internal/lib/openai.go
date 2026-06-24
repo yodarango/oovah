@@ -109,12 +109,11 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		I have the following question about the %s language that I need help with.
 		Make sure to respond in %s.
 		Respond as concisely as possible but without ommitting too much details.
-		I am interested in how this text is used in every day contexts and any nuances they might need to know about. Following is my question: %s`, sourceLang, responseIn, text)
+		I am interested in how this text is used in every day contexts and any nuances they might need to know about. Following is my question: %s.
+		Make sure you respect the json format instructed in the system requirements.`, sourceLang, responseIn, text)
 	} else {
-		prompt = fmt.Sprintf("Translate the following text from %s to %s:\n\n%s. Make sure to respond in %s. \n\n Do not tell me anything else other than the translation.", sourceLang, targetLang, text, responseIn)
+		prompt = text
 	}
-
-	prompt = fmt.Sprintf("%s \n\n Make sure you respect the json format instructed in the system requirements.", prompt)
 
 	var systemPrompt string
 
@@ -136,7 +135,7 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		Your job is to translate as accurately as possible the text sent by the user from %s to %s.
 		Respond with the translation only. Do not add explanations, examples, notes, or any other text.
 		Make sure that your response is always in plain text and never include other text that does not have to do with the translation, like offering further help or speaking directly to the user.
-		If the word has more than more than one meaning, then provide them separated by comme in the order of frequency.`, sourceLang, targetLang)
+		If the word has more than more than one meaning, then provide the other meanings separated by comme in the order of frequency.`, sourceLang, targetLang)
 
 		if targetLang == "Spanish" {
 			systemPrompt = fmt.Sprintf("%s \n Use the mexican dialect. ", systemPrompt)

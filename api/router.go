@@ -20,16 +20,18 @@ func Router () http.Handler {
 	mux.HandleFunc(constants.ROUTE_GET_AUTH_SAMPLE, models.Authenticate(SampleAuth))
 	mux.HandleFunc(constants.ROUTE_GET_PUBLIC_SAMPLE, SamplePub)
 
-	// auth routes (no authentication required)
-	mux.HandleFunc(constants.ROUTE_POST_CHANGE_PASSWORD, models.Authenticate(ChangePassword))
-	mux.HandleFunc(constants.ROUTE_POST_UPDATE_PROFILE, models.Authenticate(UpdateProfile))
+	// Public auth routes
 	mux.HandleFunc(constants.ROUTE_POST_FORGOT_PASSWORD, ForgotPassword)
 	mux.HandleFunc(constants.ROUTE_POST_VERIFY_EMAIL, VerifyEmail)
 	mux.HandleFunc(constants.ROUTE_POST_SIGNUP, Signup)
 	mux.HandleFunc(constants.ROUTE_POST_LOGIN, Login)
-	mux.HandleFunc(constants.ROUTE_POST_TRANSLATE, Translate)
-	mux.HandleFunc(constants.ROUTE_GET_CONVERSATION, ConversationHandler)
-	mux.HandleFunc(constants.ROUTE_GET_CONVERSATIONS, GetConversations)
+
+	// Protected routes
+	mux.HandleFunc(constants.ROUTE_POST_CHANGE_PASSWORD, models.Authenticate(ChangePassword))
+	mux.HandleFunc(constants.ROUTE_POST_UPDATE_PROFILE, models.Authenticate(UpdateProfile))
+	mux.HandleFunc(constants.ROUTE_POST_TRANSLATE, models.Authenticate(Translate))
+	mux.HandleFunc(constants.ROUTE_GET_CONVERSATION, models.Authenticate(ConversationHandler))
+	mux.HandleFunc(constants.ROUTE_GET_CONVERSATIONS, models.Authenticate(GetConversations))
 
 	// Serve static files from the frontend build
 	staticPath := os.Getenv("STATIC_PATH")
@@ -40,6 +42,16 @@ func Router () http.Handler {
 	mux.Handle("/", spa)
 
 	return utils.EnableCORS(mux)
+}
+
+// getUserIdFromContext extracts the authenticated user ID from the request context.
+func getUserIdFromContext(r *http.Request) int {
+	user, ok := r.Context().Value(constants.USER_CONTEXT_AUTH_KEY).(*models.AuthUser)
+	if !ok || user == nil {
+		return 0
+	}
+
+	return int(user.Id)
 }
 
 // spaHandler implements the http.Handler interface for serving a SPA
@@ -351,6 +363,8 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request){
 func Translate(w http.ResponseWriter, r *http.Request) {
 	var httpResponse models.HttpResponse
 
+	userId := getUserIdFromContext(r)
+
 	var requestBody struct {
 		Source         string `json:"source"`
 		Target         string `json:"target"`
@@ -394,7 +408,7 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 	var previousMessages []models.Message
 
 	if requestBody.ConversationId > 0 {
-		conversation, err := models.GetConversationById(requestBody.ConversationId)
+		conversation, err := models.GetConversationById(requestBody.ConversationId, userId)
 		if err != nil {
 			httpResponse.Error = fmt.Sprintf("%v", err)
 			httpResponse.Success = false
@@ -405,7 +419,7 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 		conversationId = conversation.Id
 		previousMessages = conversation.Messages
 	} else {
-		id, err := models.CreateConversation(conversationType, requestBody.Source, requestBody.Target, requestBody.ResponseIn)
+		id, err := models.CreateConversation(userId, conversationType, requestBody.Source, requestBody.Target, requestBody.ResponseIn)
 		if err != nil {
 			httpResponse.Error = fmt.Sprintf("%v", err)
 			httpResponse.Success = false
@@ -480,6 +494,8 @@ func ConversationHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteConversation(w http.ResponseWriter, r *http.Request) {
 	var httpResponse models.HttpResponse
 
+	userId := getUserIdFromContext(r)
+
 	idStr := strings.TrimPrefix(r.URL.Path, constants.ROUTE_DELETE_CONVERSATION)
 	idStr = strings.TrimSpace(idStr)
 
@@ -500,7 +516,7 @@ func DeleteConversation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = models.DeleteConversation(id)
+	err = models.DeleteConversation(id, userId)
 	if err != nil {
 		httpResponse.Error = fmt.Sprintf("%v", err)
 		httpResponse.Success = false
@@ -520,6 +536,8 @@ func DeleteConversation(w http.ResponseWriter, r *http.Request) {
 ************************************************************************/
 func GetConversation(w http.ResponseWriter, r *http.Request) {
 	var httpResponse models.HttpResponse
+
+	userId := getUserIdFromContext(r)
 
 	idStr := strings.TrimPrefix(r.URL.Path, constants.ROUTE_GET_CONVERSATION)
 	idStr = strings.TrimSpace(idStr)
@@ -541,7 +559,7 @@ func GetConversation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conversation, err := models.GetConversationById(id)
+	conversation, err := models.GetConversationById(id, userId)
 	if err != nil {
 		httpResponse.Error = fmt.Sprintf("%v", err)
 		httpResponse.Success = false
@@ -561,6 +579,8 @@ func GetConversation(w http.ResponseWriter, r *http.Request) {
 ************************************************************************/
 func GetConversations(w http.ResponseWriter, r *http.Request) {
 	var httpResponse models.HttpResponse
+
+	userId := getUserIdFromContext(r)
 
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
@@ -582,7 +602,7 @@ func GetConversations(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	conversations, total, err := models.GetConversations(limit, offset)
+	conversations, total, err := models.GetConversations(userId, limit, offset)
 	if err != nil {
 		httpResponse.Error = fmt.Sprintf("%v", err)
 		httpResponse.Success = false

@@ -6,7 +6,7 @@ import {
   TranslationView,
   HistoryView,
 } from "@views";
-import { MainLayout } from "@components";
+import { MainLayout, ProtectedRoute } from "@components";
 import {
   createRoutesFromElements,
   createBrowserRouter,
@@ -29,10 +29,38 @@ import "./App.css";
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path={""} element={<MainLayout />} errorElement={<></>}>
-      <Route path={ROUTE_HOME} element={<IndexView />} />
-      <Route path={ROUTE_CONVERSATION} element={<ConversationView />} />
-      <Route path={ROUTE_TRANSLATION} element={<TranslationView />} />
-      <Route path={ROUTE_HISTORY} element={<HistoryView />} />
+      <Route
+        path={ROUTE_HOME}
+        element={
+          <ProtectedRoute>
+            <IndexView />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTE_CONVERSATION}
+        element={
+          <ProtectedRoute>
+            <ConversationView />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTE_TRANSLATION}
+        element={
+          <ProtectedRoute>
+            <TranslationView />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTE_HISTORY}
+        element={
+          <ProtectedRoute>
+            <HistoryView />
+          </ProtectedRoute>
+        }
+      />
       <Route path={ROUTE_AUTH} element={<AuthView />} />
       <Route path={ROUTE_AUTH_VERIFY} element={<AuthVerifyView />} />
     </Route>,

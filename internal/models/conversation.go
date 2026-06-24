@@ -18,6 +18,7 @@ type Message struct {
 // Conversation represents a translation or question thread.
 type Conversation struct {
 	Id          int       `json:"id"`
+	UserId      int       `json:"user_id"`
 	Type        string    `json:"type"`
 	Source      string    `json:"source"`
 	Target      string    `json:"target"`
@@ -28,12 +29,12 @@ type Conversation struct {
 }
 
 // CreateConversation inserts a new conversation and returns its ID.
-func CreateConversation(conversationType, source, target, responseIn string) (int, error) {
+func CreateConversation(userId int, conversationType, source, target, responseIn string) (int, error) {
 	query := `
-		INSERT INTO conversations (type, source, target, response_in)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO conversations (user_id, type, source, target, response_in)
+		VALUES (?, ?, ?, ?, ?)
 	`
-	result, err := ModelsRepo.DB.Conn.Exec(query, conversationType, source, target, responseIn)
+	result, err := ModelsRepo.DB.Conn.Exec(query, userId, conversationType, source, target, responseIn)
 	if err != nil {
 		return 0, fmt.Errorf("could not create conversation: %w", err)
 	}
@@ -60,18 +61,19 @@ func AddMessage(conversationId int, role, content string) error {
 	return nil
 }
 
-// GetConversationById retrieves a conversation and all its messages.
-func GetConversationById(id int) (*Conversation, error) {
+// GetConversationById retrieves a conversation and all its messages for a specific user.
+func GetConversationById(id, userId int) (*Conversation, error) {
 	query := `
-		SELECT id, type, source, target, response_in, created_at, updated_at
+		SELECT id, user_id, type, source, target, response_in, created_at, updated_at
 		FROM conversations
-		WHERE id = ?
+		WHERE id = ? AND user_id = ?
 	`
-	row := ModelsRepo.DB.Conn.QueryRow(query, id)
+	row := ModelsRepo.DB.Conn.QueryRow(query, id, userId)
 
 	var conversation Conversation
 	err := row.Scan(
 		&conversation.Id,
+		&conversation.UserId,
 		&conversation.Type,
 		&conversation.Source,
 		&conversation.Target,
@@ -122,25 +124,26 @@ func GetConversationById(id int) (*Conversation, error) {
 
 // GetMessagesByConversationId returns only the messages for a conversation.
 // GetConversations retrieves a paginated list of conversations with message counts
-// and the first user and assistant messages for preview.
-func GetConversations(limit, offset int) ([]struct {
+// and the first user and assistant messages for preview, filtered by user.
+func GetConversations(userId, limit, offset int) ([]struct {
 	Conversation
 	MessageCount          int    `json:"message_count"`
 	FirstUserMessage      string `json:"first_user_message"`
 	FirstAssistantMessage string `json:"first_assistant_message"`
 }, int, error) {
 	query := `
-		SELECT c.id, c.type, c.source, c.target, c.response_in, c.created_at, c.updated_at,
+		SELECT c.id, c.user_id, c.type, c.source, c.target, c.response_in, c.created_at, c.updated_at,
 			COUNT(m.id) AS message_count,
 			(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'user' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_user_message,
 			(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'assistant' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_assistant_message
 		FROM conversations c
 		LEFT JOIN messages m ON m.conversation_id = c.id
+		WHERE c.user_id = ?
 		GROUP BY c.id
 		ORDER BY c.updated_at DESC, c.id DESC
 		LIMIT ? OFFSET ?
 	`
-	rows, err := ModelsRepo.DB.Conn.Query(query, limit, offset)
+	rows, err := ModelsRepo.DB.Conn.Query(query, userId, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("could not get conversations: %w", err)
 	}
@@ -161,6 +164,7 @@ func GetConversations(limit, offset int) ([]struct {
 		}
 		err := rows.Scan(
 			&item.Id,
+			&item.UserId,
 			&item.Type,
 			&item.Source,
 			&item.Target,
@@ -182,7 +186,7 @@ func GetConversations(limit, offset int) ([]struct {
 	}
 
 	var total int
-	err = ModelsRepo.DB.Conn.QueryRow("SELECT COUNT(*) FROM conversations").Scan(&total)
+	err = ModelsRepo.DB.Conn.QueryRow("SELECT COUNT(*) FROM conversations WHERE user_id = ?", userId).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("could not count conversations: %w", err)
 	}
@@ -190,14 +194,17 @@ func GetConversations(limit, offset int) ([]struct {
 	return conversations, total, nil
 }
 
-// DeleteConversation removes a conversation and all of its messages.
-func DeleteConversation(id int) error {
-	_, err := ModelsRepo.DB.Conn.Exec("DELETE FROM messages WHERE conversation_id = ?", id)
+// DeleteConversation removes a conversation and all of its messages for a specific user.
+func DeleteConversation(id, userId int) error {
+	_, err := ModelsRepo.DB.Conn.Exec(
+		"DELETE FROM messages WHERE conversation_id = ? AND conversation_id IN (SELECT id FROM conversations WHERE id = ? AND user_id = ?)",
+		id, id, userId,
+	)
 	if err != nil {
 		return fmt.Errorf("could not delete messages: %w", err)
 	}
 
-	_, err = ModelsRepo.DB.Conn.Exec("DELETE FROM conversations WHERE id = ?", id)
+	_, err = ModelsRepo.DB.Conn.Exec("DELETE FROM conversations WHERE id = ? AND user_id = ?", id, userId)
 	if err != nil {
 		return fmt.Errorf("could not delete conversation: %w", err)
 	}
