@@ -11,6 +11,7 @@ services:
       - app-network
     volumes:
       - .:/app
+      - ./.env:/root/.env:ro
 
 networks:
   app-network:

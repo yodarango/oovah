@@ -35,9 +35,10 @@ func main (){
 	defer dbConfig.Conn.Close()
 	
 	// set up the app
+	// Load .env if it exists; environment variables already set take precedence.
 	err = godotenv.Load()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("No .env file loaded: %v", err)
 	}
 	env := os.Getenv("ENV")
 	appConfig := config.NewAppConfig(env)
