@@ -109,11 +109,6 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 2rem;
 }
 
 .conversation-layout-56yl__textarea {
@@ -122,4 +117,6 @@
 
 .conversation-layout-56yl__button {
   width: 100%;
+  max-width: 40rem;
+  margin: auto;
 }
