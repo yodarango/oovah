@@ -93,6 +93,8 @@ export const AppContextProvider = (props) => {
     setState((prevState) =>
       update(prevState, {
         isAuthenticated: { $set: false },
+        isActive: { $set: false },
+        isPending: { $set: false },
         auth: { $set: {} },
         user: { $set: {} },
       }),
