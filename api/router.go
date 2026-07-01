@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"oovah/constants"
-	"oovah/internal/lib"
 	"oovah/internal/models"
 	"oovah/internal/utils"
 	"os"
@@ -362,19 +361,9 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request){
 ************************************************************************/
 func Translate(w http.ResponseWriter, r *http.Request) {
 	var httpResponse models.HttpResponse
+	var translation models.Translation
 
-	userId := getUserIdFromContext(r)
-
-	var requestBody struct {
-		Source         string `json:"source"`
-		Target         string `json:"target"`
-		Text           string `json:"text"`
-		ResponseIn     string `json:"responseIn"`
-		IsQuestion     bool   `json:"isQuestion"`
-		ConversationId int    `json:"conversationId"`
-	}
-
-	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	err := translation.RequestToStruct(r.Body)
 	if err != nil {
 		httpResponse.Error = "Invalid request format"
 		httpResponse.Success = false
@@ -383,82 +372,9 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if requestBody.Text == "" {
-		httpResponse.Error = "text is required"
-		httpResponse.Success = false
-		httpResponse.Data = nil
-		httpResponse.Send(w)
-		return
-	}
+	userId := getUserIdFromContext(r)
 
-	if !requestBody.IsQuestion && (requestBody.Source == "" || requestBody.Target == "") {
-		httpResponse.Error = "source and target are required for translations"
-		httpResponse.Success = false
-		httpResponse.Data = nil
-		httpResponse.Send(w)
-		return
-	}
-
-	conversationType := "translation"
-	if requestBody.IsQuestion {
-		conversationType = "question"
-	}
-
-	var conversationId int
-	var previousMessages []models.Message
-
-	if requestBody.ConversationId > 0 {
-		conversation, err := models.GetConversationById(requestBody.ConversationId, userId)
-		if err != nil {
-			httpResponse.Error = fmt.Sprintf("%v", err)
-			httpResponse.Success = false
-			httpResponse.Data = nil
-			httpResponse.Send(w)
-			return
-		}
-		conversationId = conversation.Id
-		previousMessages = conversation.Messages
-	} else {
-		id, err := models.CreateConversation(userId, conversationType, requestBody.Source, requestBody.Target, requestBody.ResponseIn)
-		if err != nil {
-			httpResponse.Error = fmt.Sprintf("%v", err)
-			httpResponse.Success = false
-			httpResponse.Data = nil
-			httpResponse.Send(w)
-			return
-		}
-		conversationId = id
-	}
-
-	err = models.AddMessage(conversationId, "user", requestBody.Text)
-	if err != nil {
-		httpResponse.Error = fmt.Sprintf("%v", err)
-		httpResponse.Success = false
-		httpResponse.Data = nil
-		httpResponse.Send(w)
-		return
-	}
-
-	service := lib.NewTranslationService()
-
-	var libMessages []lib.Message
-	for _, message := range previousMessages {
-		libMessages = append(libMessages, lib.Message{
-			Role:    message.Role,
-			Content: message.Content,
-		})
-	}
-
-	translation, err := service.Translate(requestBody.Source, requestBody.Target, requestBody.Text, requestBody.ResponseIn, requestBody.IsQuestion, libMessages)
-	if err != nil {
-		httpResponse.Error = fmt.Sprintf("%v", err)
-		httpResponse.Success = false
-		httpResponse.Data = nil
-		httpResponse.Send(w)
-		return
-	}
-
-	err = models.AddMessage(conversationId, "assistant", translation)
+	translatedText, conversationId, err := translation.Translate(userId)
 	if err != nil {
 		httpResponse.Error = fmt.Sprintf("%v", err)
 		httpResponse.Success = false
@@ -468,7 +384,7 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	httpResponse.Data = map[string]interface{}{
-		"translation":    translation,
+		"translation":    translatedText,
 		"conversationId": conversationId,
 	}
 	httpResponse.Success = true

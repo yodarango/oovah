@@ -87,8 +87,10 @@ func NewTranslationService() *TranslationService {
 }
 
 // Translate sends text to OpenAI and returns the translated version.
-// Previous messages can be provided to maintain conversation context.
-func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn string, isQuestion bool, previousMessages []Message) (string, error) {
+// Previous messages can be provided to maintain conversation context. When
+// isContinuingConversation is true, the history is formatted as a single user
+// message and the system prompt is extended with a conversation instruction.
+func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn string, isQuestion bool, previousMessages []Message, isContinuingConversation bool) (string, error) {
 	if t.client == nil {
 		return "", fmt.Errorf("OPEN_AI is not configured")
 	}
@@ -115,6 +117,11 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		prompt = text
 	}
 
+	conversationInstruction := ""
+	if isContinuingConversation {
+		conversationInstruction = "The text you are receiving is a thread of a conversation between the user and you so analyze the questions and answers from beggining to end so you can carry the conversation."
+	}
+
 	var systemPrompt string
 
 	if isQuestion {
@@ -125,17 +132,19 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		If the user has typed the request in any language other than Spanish or English, inspect the text for grammar or syntax errors and respond with the corrections after you have answered the request.
 		If the user has typed the request in any language other than Spanish or English, know that that is not their native tongue and they are students of it.
 		Do not provide corrections for requests that are written in English nor Spanish.
+		%s.
 		The following instructions are critical. You must always respond with a single valid JSON object and nothing else. The JSON must use this exact structure:
 		{"response": "<answer to the question>", "has_corrections": <true or false>, "corrections": "<corrections or empty string>"}
 		Do not wrap the JSON in markdown code blocks, do not add any explanation text before or after the JSON, and do not use any other format.
-		`, sourceLang, responseIn, sourceLang)
+		`, sourceLang, responseIn, sourceLang, conversationInstruction)
 
 	} else {
 		systemPrompt = fmt.Sprintf(`
 		Your job is to translate as accurately as possible the text sent by the user from %s to %s.
 		Respond with the translation only. Do not add explanations, examples, notes, or any other text.
 		Make sure that your response is always in plain text and never include other text that does not have to do with the translation, like offering further help or speaking directly to the user.
-		If the word has more than more than one meaning, then provide the other meanings separated by comme in the order of frequency.`, sourceLang, targetLang)
+		If the word has more than more than one meaning, then provide the other meanings separated by comme in the order of frequency.
+		%s`, sourceLang, targetLang, conversationInstruction)
 
 		if targetLang == "Spanish" {
 			systemPrompt = fmt.Sprintf("%s \n Use the mexican dialect. ", systemPrompt)
@@ -153,21 +162,47 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 		},
 	}
 
-	for _, message := range previousMessages {
-		role := openai.ChatMessageRoleUser
-		if message.Role == "assistant" {
-			role = openai.ChatMessageRoleAssistant
+	if isContinuingConversation && len(previousMessages) > 0 {
+		var thread strings.Builder
+		for i, message := range previousMessages {
+			if i > 0 {
+				thread.WriteString(" ")
+			}
+			label := "user"
+			if message.Role == "assistant" {
+				label = "assistant"
+			}
+			thread.WriteString(fmt.Sprintf("%s: %s", label, message.Content))
 		}
+
+		if thread.Len() > 0 {
+			thread.WriteString(" ")
+		}
+		thread.WriteString(fmt.Sprintf("user: %s", prompt))
+
 		messages = append(messages, openai.ChatCompletionMessage{
-			Role:    role,
-			Content: message.Content,
+			Role:    openai.ChatMessageRoleUser,
+			Content: thread.String(),
+		})
+	} else {
+		for _, message := range previousMessages {
+			role := openai.ChatMessageRoleUser
+			if message.Role == "assistant" {
+				role = openai.ChatMessageRoleAssistant
+			}
+			messages = append(messages, openai.ChatCompletionMessage{
+				Role:    role,
+				Content: message.Content,
+			})
+		}
+
+		messages = append(messages, openai.ChatCompletionMessage{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
 		})
 	}
 
-	messages = append(messages, openai.ChatCompletionMessage{
-		Role:    openai.ChatMessageRoleUser,
-		Content: prompt,
-	})
+	fmt.Println(messages)
 
 	resp, err := t.client.CreateChatCompletion(
 		context.Background(),

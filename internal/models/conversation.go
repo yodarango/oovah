@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -120,6 +121,67 @@ func GetConversationById(id, userId int) (*Conversation, error) {
 	}
 
 	return &conversation, nil
+}
+
+// GetRecentMessagesByConversationId retrieves the most recent messages for each
+// role in a conversation, merges them, and returns them in chronological order.
+func GetRecentMessagesByConversationId(conversationId, userLimit, assistantLimit int) ([]Message, error) {
+	fetchMessages := func(role string, limit int) ([]Message, error) {
+		query := `
+			SELECT id, conversation_id, role, content, created_at
+			FROM messages
+			WHERE conversation_id = ? AND role = ?
+			ORDER BY created_at DESC, id DESC
+			LIMIT ?
+		`
+		rows, err := ModelsRepo.DB.Conn.Query(query, conversationId, role, limit)
+		if err != nil {
+			return nil, fmt.Errorf("could not get %s messages: %w", role, err)
+		}
+		defer rows.Close()
+
+		var messages []Message
+		for rows.Next() {
+			var message Message
+			err := rows.Scan(
+				&message.Id,
+				&message.ConversationId,
+				&message.Role,
+				&message.Content,
+				&message.CreatedAt,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("could not scan %s message: %w", role, err)
+			}
+			messages = append(messages, message)
+		}
+
+		if err := rows.Err(); err != nil {
+			return nil, fmt.Errorf("error iterating %s messages: %w", role, err)
+		}
+
+		return messages, nil
+	}
+
+	userMessages, err := fetchMessages("user", userLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	assistantMessages, err := fetchMessages("assistant", assistantLimit)
+	if err != nil {
+		return nil, err
+	}
+
+	messages := append(userMessages, assistantMessages...)
+	sort.Slice(messages, func(i, j int) bool {
+		if messages[i].CreatedAt.Equal(messages[j].CreatedAt) {
+			return messages[i].Id < messages[j].Id
+		}
+		return messages[i].CreatedAt.Before(messages[j].CreatedAt)
+	})
+
+	return messages, nil
 }
 
 // GetMessagesByConversationId returns only the messages for a conversation.
