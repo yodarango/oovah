@@ -79,6 +79,23 @@ func NormalizeQuestionResponse(raw string) string {
 	return string(out)
 }
 
+// extractPlainText returns the human-readable text from a stored message.
+// For question responses it strips the JSON wrapper and returns the response
+// field; for plain text translations it returns the content unchanged.
+func extractPlainText(content string) string {
+	cleaned := strings.TrimSpace(content)
+	if !strings.HasPrefix(cleaned, "{") {
+		return cleaned
+	}
+
+	var parsed questionResponse
+	if err := json.Unmarshal([]byte(cleaned), &parsed); err == nil {
+		return parsed.Response
+	}
+
+	return cleaned
+}
+
 func NewTranslationService() *TranslationService {
 	apiKey := os.Getenv("OPEN_AI")
 	return &TranslationService{
@@ -169,16 +186,18 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 				thread.WriteString(" ")
 			}
 			label := "user"
+			displayContent := message.Content
 			if message.Role == "assistant" {
-				label = "assistant"
+				label = "system"
+				displayContent = extractPlainText(message.Content)
 			}
-			thread.WriteString(fmt.Sprintf("%s: %s", label, message.Content))
+			thread.WriteString(fmt.Sprintf("%s: %s", label, displayContent))
 		}
 
 		if thread.Len() > 0 {
 			thread.WriteString(" ")
 		}
-		thread.WriteString(fmt.Sprintf("user: %s", prompt))
+		thread.WriteString(fmt.Sprintf("user: %s", text))
 
 		messages = append(messages, openai.ChatCompletionMessage{
 			Role:    openai.ChatMessageRoleUser,
@@ -201,9 +220,6 @@ func (t *TranslationService) Translate(sourceLang, targetLang, text, responseIn 
 			Content: prompt,
 		})
 	}
-
-	fmt.Println(messages)
-
 	resp, err := t.client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{

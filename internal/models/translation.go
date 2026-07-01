@@ -66,7 +66,7 @@ func (t *Translation) Translate(userId int) (string, int, error) {
 			return "", 0, err
 		}
 		conversationId = conversation.Id
-		previousMessages, err = GetRecentMessagesByConversationId(conversationId, 3, 3)
+		previousMessages, err = GetRecentMessagesByConversationId(conversationId, 5, 5)
 		if err != nil {
 			return "", 0, err
 		}
