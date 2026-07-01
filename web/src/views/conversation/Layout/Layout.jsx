@@ -255,6 +255,7 @@ export const Layout = () => {
         <TextArea
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onPressEnter={handleSubmit}
           placeholder='Type your message...'
           className='conversation-layout-56yl__textarea'
           rows={2}

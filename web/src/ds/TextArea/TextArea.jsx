@@ -34,7 +34,7 @@ export const TextArea = ({
     // Apply min and max row constraints
     const constrainedRows = Math.max(
       minRows,
-      maxRows ? Math.min(rows, maxRows) : rows
+      maxRows ? Math.min(rows, maxRows) : rows,
     );
     const newHeight = constrainedRows * lineHeight + padding;
 
@@ -58,9 +58,15 @@ export const TextArea = ({
   };
 
   const handleKeyDown = (e) => {
-    // check if they are pressing shift plus enter in which case onPressEnter should be called
-    if (e.shiftKey && e.key === "Enter") {
-      e.preventDefault(); // Prevent default new line behavior
+    if (rest.onKeyDown) {
+      rest.onKeyDown(e);
+      if (e.defaultPrevented) return;
+    }
+
+    // Submit on Enter (without Shift). Shift+Enter falls through to the
+    // default textarea behavior and inserts a new line.
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       if (onPressEnter) {
         onPressEnter(e);
       }
@@ -118,8 +124,8 @@ export const TextArea = ({
               remainingCharacters !== null && remainingCharacters < 0
                 ? "color-dnager"
                 : remainingCharacters !== null && remainingCharacters < 20
-                ? "color-warning"
-                : ""
+                  ? "color-warning"
+                  : ""
             }
           >
             {maxCharacters ? `${remainingCharacters}` : `${currentLength}`}
