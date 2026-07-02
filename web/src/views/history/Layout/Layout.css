@@ -16,6 +16,58 @@
   font-size: 2rem;
 }
 
+.history-layout-56yl__search {
+  max-width: 60rem;
+  margin: 0 auto 2rem;
+  position: relative;
+}
+
+.history-layout-56yl__search-input {
+  width: 100%;
+  padding: 1rem 4rem 1rem 1.5rem;
+  font-size: 1.4rem;
+  color: var(--dr-alpha);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 1.5rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.history-layout-56yl__search-input::placeholder {
+  color: var(--dr-alpha);
+  opacity: 0.5;
+}
+
+.history-layout-56yl__search-input:focus {
+  border-color: var(--dr-delta);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+}
+
+.history-layout-56yl__search-clear {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--dr-alpha);
+  opacity: 0.6;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.history-layout-56yl__search-clear:hover {
+  opacity: 1;
+}
+
 .history-layout-56yl__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(35rem, 1fr));

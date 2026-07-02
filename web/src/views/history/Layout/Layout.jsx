@@ -40,15 +40,23 @@ export const Layout = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const observerTarget = useRef(null);
+  const loadingRef = useRef(false);
 
   const fetchConversations = useCallback(
     async (currentOffset) => {
-      if (loading) return;
+      if (loadingRef.current) return;
+      loadingRef.current = true;
       setLoading(true);
       try {
+        const searchParam = search
+          ? `&search=${encodeURIComponent(search)}`
+          : "";
         const response = await fetch(
-          `${API_GET_CONVERSATIONS}?limit=20&offset=${currentOffset}`,
+          `${API_GET_CONVERSATIONS}?limit=20&offset=${currentOffset}${searchParam}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -59,7 +67,8 @@ export const Layout = () => {
         const result = await response.json();
         if (result.success && result.data) {
           const newConversations = result.data.conversations || [];
-          const total = result.data.total || 0;
+          const fetchedTotal = result.data.total || 0;
+          setTotal(fetchedTotal);
           setConversations((prev) =>
             currentOffset === 0
               ? newConversations
@@ -67,7 +76,7 @@ export const Layout = () => {
           );
           const nextOffset = currentOffset + newConversations.length;
           setOffset(nextOffset);
-          setHasMore(nextOffset < total);
+          setHasMore(nextOffset < fetchedTotal);
         } else if (result.error) {
           setError(result.error);
           showErrorToast(result.error);
@@ -79,14 +88,26 @@ export const Layout = () => {
         setHasMore(false);
       } finally {
         setLoading(false);
+        loadingRef.current = false;
       }
     },
-    [loading],
+    [search],
   );
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setConversations([]);
+    setOffset(0);
+    setHasMore(true);
+    setError(null);
     fetchConversations(0);
-  }, []);
+  }, [fetchConversations]);
 
   useEffect(() => {
     const target = observerTarget.current;
@@ -94,7 +115,7 @@ export const Layout = () => {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading && !error) {
+        if (entries[0].isIntersecting && hasMore && !loadingRef.current && !error) {
           fetchConversations(offset);
         }
       },
@@ -106,7 +127,7 @@ export const Layout = () => {
     return () => {
       observer.disconnect();
     };
-  }, [observerTarget, hasMore, loading, offset, fetchConversations, error]);
+  }, [observerTarget, hasMore, offset, fetchConversations, error]);
 
   const handleCardClick = (conversation) => {
     const path =
@@ -142,14 +163,37 @@ export const Layout = () => {
   return (
     <div className='history-layout-56yl'>
       <div className='history-layout-56yl__container'>
-        <h2 className='history-layout-56yl__title'>History</h2>
+        <h2 className='history-layout-56yl__title'>History ({total})</h2>
+
+        <div className='history-layout-56yl__search'>
+          <input
+            type='text'
+            className='history-layout-56yl__search-input'
+            placeholder='Search translations and conversations...'
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            aria-label='Search history'
+          />
+          {searchInput && (
+            <button
+              className='history-layout-56yl__search-clear'
+              onClick={() => setSearchInput("")}
+              aria-label='Clear search'
+              type='button'
+            >
+              ✕
+            </button>
+          )}
+        </div>
 
         {error && (
           <p className='color-danger history-layout-56yl__empty'>{error}</p>
         )}
 
         {conversations.length === 0 && !loading && !error && (
-          <p className='history-layout-56yl__empty'>No conversations yet.</p>
+          <p className='history-layout-56yl__empty'>
+            {search ? "No matches found." : "No conversations yet."}
+          </p>
         )}
 
         <div className='history-layout-56yl__grid'>

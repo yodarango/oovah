@@ -186,26 +186,47 @@ func GetRecentMessagesByConversationId(conversationId, userLimit, assistantLimit
 
 // GetMessagesByConversationId returns only the messages for a conversation.
 // GetConversations retrieves a paginated list of conversations with message counts
-// and the first user and assistant messages for preview, filtered by user.
-func GetConversations(userId, limit, offset int) ([]struct {
+// and the first user and assistant messages for preview, filtered by user and
+// optionally by a search string. For translation conversations, the search is
+// applied to both the first user message (source) and the first assistant message
+// (target). For question conversations, the search is applied only to the
+// first user message (original question).
+func GetConversations(userId, limit, offset int, search string) ([]struct {
 	Conversation
 	MessageCount          int    `json:"message_count"`
 	FirstUserMessage      string `json:"first_user_message"`
 	FirstAssistantMessage string `json:"first_assistant_message"`
 }, int, error) {
+	searchPattern := "%" + search + "%"
+
 	query := `
-		SELECT c.id, c.user_id, c.type, c.source, c.target, c.response_in, c.created_at, c.updated_at,
-			COUNT(m.id) AS message_count,
-			(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'user' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_user_message,
-			(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'assistant' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_assistant_message
-		FROM conversations c
-		LEFT JOIN messages m ON m.conversation_id = c.id
-		WHERE c.user_id = ?
-		GROUP BY c.id
-		ORDER BY c.updated_at DESC, c.id DESC
+		WITH conversation_data AS (
+			SELECT
+				c.id,
+				c.user_id,
+				c.type,
+				c.source,
+				c.target,
+				c.response_in,
+				c.created_at,
+				c.updated_at,
+				COUNT(m.id) AS message_count,
+				(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'user' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_user_message,
+				(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'assistant' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_assistant_message
+			FROM conversations c
+			LEFT JOIN messages m ON m.conversation_id = c.id
+			WHERE c.user_id = ?
+			GROUP BY c.id
+		)
+		SELECT id, user_id, type, source, target, response_in, created_at, updated_at, message_count, first_user_message, first_assistant_message
+		FROM conversation_data
+		WHERE ? = '' OR
+			  (type = 'translation' AND (first_user_message LIKE ? OR first_assistant_message LIKE ?)) OR
+			  (type = 'question' AND first_user_message LIKE ?)
+		ORDER BY updated_at DESC, id DESC
 		LIMIT ? OFFSET ?
 	`
-	rows, err := ModelsRepo.DB.Conn.Query(query, userId, limit, offset)
+	rows, err := ModelsRepo.DB.Conn.Query(query, userId, search, searchPattern, searchPattern, searchPattern, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("could not get conversations: %w", err)
 	}
@@ -247,8 +268,27 @@ func GetConversations(userId, limit, offset int) ([]struct {
 		return nil, 0, fmt.Errorf("error iterating conversations: %w", err)
 	}
 
+	countQuery := `
+		WITH conversation_data AS (
+			SELECT
+				c.id,
+				c.type,
+				COUNT(m.id) AS message_count,
+				(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'user' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_user_message,
+				(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'assistant' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_assistant_message
+			FROM conversations c
+			LEFT JOIN messages m ON m.conversation_id = c.id
+			WHERE c.user_id = ?
+			GROUP BY c.id
+		)
+		SELECT COUNT(*)
+		FROM conversation_data
+		WHERE ? = '' OR
+			  (type = 'translation' AND (first_user_message LIKE ? OR first_assistant_message LIKE ?)) OR
+			  (type = 'question' AND first_user_message LIKE ?)
+	`
 	var total int
-	err = ModelsRepo.DB.Conn.QueryRow("SELECT COUNT(*) FROM conversations WHERE user_id = ?", userId).Scan(&total)
+	err = ModelsRepo.DB.Conn.QueryRow(countQuery, userId, search, searchPattern, searchPattern, searchPattern).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("could not count conversations: %w", err)
 	}

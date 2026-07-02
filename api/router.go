@@ -500,6 +500,7 @@ func GetConversations(w http.ResponseWriter, r *http.Request) {
 
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
+	search := strings.TrimSpace(r.URL.Query().Get("search"))
 
 	limit := 20
 	offset := 0
@@ -518,7 +519,7 @@ func GetConversations(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	conversations, total, err := models.GetConversations(userId, limit, offset)
+	conversations, total, err := models.GetConversations(userId, limit, offset, search)
 	if err != nil {
 		httpResponse.Error = fmt.Sprintf("%v", err)
 		httpResponse.Success = false
