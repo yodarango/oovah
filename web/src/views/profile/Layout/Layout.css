@@ -1,0 +1,28 @@
+.profile-layout-56yl {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.profile-layout-56yl__title {
+  text-align: center;
+  color: var(--dr-alpha);
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.profile-layout-56yl__field {
+  margin-bottom: 1.6rem;
+}
+
+.profile-layout-56yl__field label {
+  display: block;
+  margin-bottom: 0.6rem;
+  color: var(--dr-alpha);
+}
+
+.profile-layout-56yl__avatar {
+  width: 8rem;
+  height: 8rem;
+  cursor: pointer;
+}

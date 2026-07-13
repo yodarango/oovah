@@ -93,75 +93,102 @@ func (u *User) Create() (error){
 
 
 /**************************************************************************************
-* A function that at the moment will update only the first and last name of the user. 
-* Perhaps in the future I will allow to update other fields.
-* 
+* Updates the editable profile fields of a user: first name, last name, username and
+* avatar. If a new password is provided it will also be updated without requiring the
+* current password (the user is already authenticated). The email is never updated.
+*
 * status: ✅
 ****************************************************************************************/
 func (u *User) Update(userId uint) (error){
-	query := `
-		UPDATE users SET 
-		first_name = ?,
-		last_name =? ,
-		WHERE id = ?
-	`
 
-	queryUsername := `
-		SELECT id, username, email 
-		FROM users 
-		WHERE username = ? OR email = ?
-	`
-
-	userIdsByUsername := make([]int, 0)
-	userIdsByEmail := make([]int, 0)
-
-	rows, err := ModelsRepo.DB.Conn.Query(queryUsername, u.Username)
-
-	if err != nil {
-		return fmt.Errorf("Erro getting users by username \n %w", err)
+	if len(u.FirstName) == 0 {
+		return fmt.Errorf("first name is required")
 	}
 
-	defer rows.Close()
-
-	// first of ll check if this email or username exist
-	for rows.Next(){
-		var user User
-
-		err := rows.Scan(&user)
-
-		if err != nil {
-			return fmt.Errorf("Erro sacning rows \n %w", err)
-		}
-
-		// only check the users that are not this user 
-		if userId != uint(user.Id) {
-			userIdsByUsername = append(userIdsByUsername, user.Id)
-			userIdsByEmail = append(userIdsByEmail, user.Id)
-		}
+	if len(u.LastName) == 0 {
+		return fmt.Errorf("last name is required")
 	}
 
-	if len(userIdsByUsername) > 0 {
+	if len(u.Username) == 0 {
+		return fmt.Errorf("username is required")
+	}
+
+	// make sure the username is not already taken by another user
+	checkUsername := `
+		SELECT id
+		FROM users
+		WHERE username = ? AND id != ?
+	`
+
+	var existingId int
+	err := ModelsRepo.DB.Conn.QueryRow(checkUsername, u.Username, userId).Scan(&existingId)
+
+	if err == nil {
 		return fmt.Errorf("this username is already taken, please try another one")
 	}
 
-	if len(userIdsByUsername) > 0 {
-		return fmt.Errorf("this email is already linked to another account, are you sure you don't have an account yet")
+	if err != sql.ErrNoRows {
+		return fmt.Errorf("could not verify username availability \n %w", err)
 	}
 
-	result, err := ModelsRepo.DB.Conn.Exec(query, 
+	// when a new password is provided we hash it and include it in the update
+	if len(u.Password) > 0 {
+		if len(u.Password) < 6 {
+			return fmt.Errorf("new password must be at least 6 characters long")
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Errorf("could not hash new password \n %w", err)
+		}
+
+		query := `
+			UPDATE users SET
+			first_name = ?,
+			last_name = ?,
+			username = ?,
+			avatar = ?,
+			password = ?,
+			updated_at = CURRENT_TIMESTAMP
+			WHERE id = ?
+		`
+
+		_, err = ModelsRepo.DB.Conn.Exec(query,
+			u.FirstName,
+			u.LastName,
+			u.Username,
+			u.Avatar,
+			hashedPassword,
+			userId,
+		)
+
+		if err != nil {
+			return fmt.Errorf("could not update this user \n %w", err)
+		}
+
+		return nil
+	}
+
+	query := `
+		UPDATE users SET
+		first_name = ?,
+		last_name = ?,
+		username = ?,
+		avatar = ?,
+		updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`
+
+	_, err = ModelsRepo.DB.Conn.Exec(query,
 		u.FirstName,
 		u.LastName,
+		u.Username,
+		u.Avatar,
 		userId,
 	)
 
 	if err != nil {
 		return fmt.Errorf("could not update this user \n %w", err)
-	}
-
-	_, err = result.RowsAffected()
-
-	if err != nil {
-		return fmt.Errorf("could not get rows affected: \n %w", err)
 	}
 
 	return nil
@@ -485,7 +512,7 @@ func (u *User) ForgotPassword(body io.ReadCloser) error {
 	// Update user password in database
 	updateQuery := `
 		UPDATE users
-		SET password = ?, updated_at = NOW()
+		SET password = ?, updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`
 
@@ -582,8 +609,8 @@ func (u *User) ChangePassword(body io.ReadCloser, userId uint) error {
 
 	// Update password in database
 	updateQuery := `
-		UPDATE users 
-		SET password = ?, updated_at = NOW()
+		UPDATE users
+		SET password = ?, updated_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`
 

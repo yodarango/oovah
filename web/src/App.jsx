@@ -5,6 +5,7 @@ import {
   ConversationView,
   TranslationView,
   HistoryView,
+  ProfileView,
 } from "@views";
 import { MainLayout, ProtectedRoute } from "@components";
 import {
@@ -20,6 +21,7 @@ import {
   ROUTE_CONVERSATION,
   ROUTE_TRANSLATION,
   ROUTE_HISTORY,
+  ROUTE_PROFILE,
 } from "@constants";
 
 // global styles
@@ -58,6 +60,14 @@ const router = createBrowserRouter(
         element={
           <ProtectedRoute>
             <HistoryView />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTE_PROFILE}
+        element={
+          <ProtectedRoute>
+            <ProfileView />
           </ProtectedRoute>
         }
       />

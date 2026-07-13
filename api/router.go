@@ -348,8 +348,32 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	httpResponse.Data = map[string]string{
-		"message": "Profile updated successfully",
+	// Regenerate the auth token so the client reflects the updated profile. The
+	// email and status are preserved from the authenticated user since they are
+	// not editable through this endpoint.
+	updatedAuthUser := models.AuthUser{
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Username:  user.Username,
+		Avatar:    user.Avatar,
+		Email:     authUser.Email,
+		Status:    authUser.Status,
+		Id:        authUser.Id,
+	}
+
+	token, err := updatedAuthUser.GenerateJWT()
+	if err != nil {
+		httpResponse.Error = fmt.Sprintf("could not generate authentication token: %v", err)
+		httpResponse.Success = false
+		httpResponse.Data = nil
+		httpResponse.Send(w)
+		return
+	}
+
+	httpResponse.Data = map[string]interface{}{
+		"message":   "Profile updated successfully",
+		"AuthToken": token,
+		"User":      user,
 	}
 	httpResponse.Success = true
 	httpResponse.Error = nil

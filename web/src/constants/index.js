@@ -5,6 +5,7 @@ export const ROUTE_CONVERSATION = "/conversation/:id";
 export const ROUTE_TRANSLATION = "/translation/:id";
 export const ROUTE_HISTORY = "/history";
 export const ROUTE_TRANSLATE = "/translate";
+export const ROUTE_PROFILE = "/profile";
 
 // api base
 export const API_BASE = import.meta.env.VITE_API_BASE || "/api";

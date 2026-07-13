@@ -4,3 +4,4 @@ export { AuthView } from "./auth/View";
 export { ConversationView } from "./conversation/View";
 export { TranslationView } from "./translate/View";
 export { HistoryView } from "./history/View";
+export { ProfileView } from "./profile/View";
