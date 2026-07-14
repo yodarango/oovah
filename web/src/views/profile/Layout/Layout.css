@@ -26,3 +26,55 @@
   height: 8rem;
   cursor: pointer;
 }
+
+.profile-layout-56yl__row {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-layout-56yl__row--2-col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.profile-layout-56yl__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-layout-56yl__input--with-icon {
+  padding-right: 3.5rem;
+}
+
+.profile-layout-56yl__password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--dr-alpha);
+  opacity: 0.6;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+.profile-layout-56yl__password-toggle:hover {
+  opacity: 1;
+}
+
+.profile-layout-56yl__password-toggle ion-icon {
+  font-size: 1.8rem;
+}
+
+@media (max-width: 480px) {
+  .profile-layout-56yl__row--2-col {
+    grid-template-columns: 1fr;
+  }
+}

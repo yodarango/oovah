@@ -52,6 +52,19 @@
   font-size: 2.5rem;
 }
 
+.bottom-nav-56yl__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--dr-gamma);
+  border: 0.1rem solid transparent;
+}
+
+.bottom-nav-56yl__item--active .bottom-nav-56yl__avatar {
+  border-color: var(--dr-delta);
+}
+
 .bottom-nav-56yl__label {
   font-size: 1.4rem;
   font-weight: 600;

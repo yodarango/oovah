@@ -125,42 +125,23 @@ export const Layout = () => {
               <ion-icon name='person-circle-outline'></ion-icon>
             </IfElse>
           </div>
-          <Button
+          {/* <Button
             onClick={() => setShowAvatarModal(true)}
             className='mt-4'
             type='button'
             secondary
           >
             Change avatar
-          </Button>
+          </Button> */}
         </div>
 
         <div className='profile-layout-56yl__field'>
           <label htmlFor='email'>Email (cannot be changed)</label>
-          <Input value={state.user.email || ""} id='email' type='email' disabled />
-        </div>
-
-        <div className='profile-layout-56yl__field'>
-          <label htmlFor='first_name'>First Name</label>
           <Input
-            onChange={handleInputChange("first_name")}
-            value={formData.first_name}
-            placeholder='First name'
-            id='first_name'
-            type='text'
-            required
-          />
-        </div>
-
-        <div className='profile-layout-56yl__field'>
-          <label htmlFor='last_name'>Last Name</label>
-          <Input
-            onChange={handleInputChange("last_name")}
-            value={formData.last_name}
-            placeholder='Last name'
-            id='last_name'
-            type='text'
-            required
+            value={state.user.email || ""}
+            id='email'
+            type='email'
+            disabled
           />
         </div>
 
@@ -176,40 +157,84 @@ export const Layout = () => {
           />
         </div>
 
-        <div className='profile-layout-56yl__field'>
-          <label htmlFor='password'>New Password (leave blank to keep current)</label>
-          <div className='position-relative'>
+        <div className='profile-layout-56yl__row profile-layout-56yl__row--2-col'>
+          <div className='profile-layout-56yl__field'>
+            <label htmlFor='first_name'>First Name</label>
             <Input
-              onChange={handleInputChange("password")}
-              value={formData.password}
-              placeholder='New password'
-              type={showPassword ? "text" : "password"}
-              id='password'
+              onChange={handleInputChange("first_name")}
+              value={formData.first_name}
+              placeholder='First name'
+              id='first_name'
+              type='text'
+              required
             />
-            <button
-              type='button'
-              className='password-toggle-btn position-absolute p-1'
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              <ion-icon
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
-              ></ion-icon>
-            </button>
+          </div>
+          <div className='profile-layout-56yl__field'>
+            <label htmlFor='last_name'>Last Name</label>
+            <Input
+              onChange={handleInputChange("last_name")}
+              value={formData.last_name}
+              placeholder='Last name'
+              id='last_name'
+              type='text'
+              required
+            />
           </div>
         </div>
 
-        <div className='profile-layout-56yl__field'>
-          <label htmlFor='confirmPassword'>Confirm New Password</label>
-          <Input
-            onChange={handleInputChange("confirmPassword")}
-            value={formData.confirmPassword}
-            placeholder='Confirm new password'
-            type={showPassword ? "text" : "password"}
-            id='confirmPassword'
-          />
+        <div className='profile-layout-56yl__row profile-layout-56yl__row--2-col'>
+          <div className='profile-layout-56yl__field'>
+            <label htmlFor='password'>New Password</label>
+            <div className='profile-layout-56yl__input-wrapper'>
+              <Input
+                onChange={handleInputChange("password")}
+                value={formData.password}
+                placeholder='New password'
+                type={showPassword ? "text" : "password"}
+                id='password'
+                className='profile-layout-56yl__input--with-icon'
+              />
+              <button
+                type='button'
+                className='profile-layout-56yl__password-toggle'
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <ion-icon
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                ></ion-icon>
+              </button>
+            </div>
+          </div>
+          <div className='profile-layout-56yl__field'>
+            <label htmlFor='confirmPassword'>Confirm Password</label>
+            <div className='profile-layout-56yl__input-wrapper'>
+              <Input
+                onChange={handleInputChange("confirmPassword")}
+                value={formData.confirmPassword}
+                placeholder='Confirm new password'
+                type={showPassword ? "text" : "password"}
+                id='confirmPassword'
+                className='profile-layout-56yl__input--with-icon'
+              />
+              <button
+                type='button'
+                className='profile-layout-56yl__password-toggle'
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <ion-icon
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                ></ion-icon>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <Button type='submit' default isLoading={loading} className='w-100 mt-4'>
+        <Button
+          type='submit'
+          default
+          isLoading={loading}
+          className='w-100 mt-4'
+        >
           Save Changes
         </Button>
       </form>
