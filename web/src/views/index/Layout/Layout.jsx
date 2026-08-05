@@ -3,7 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { TextArea, Switch, Button, Loading } from "@ds";
 import { usePost } from "@utils";
 import { useAppContext } from "../../context/appContextProvider";
-import { API_POST_TRANSLATE, API_GET_CONVERSATION } from "@constants";
+import {
+  API_POST_TRANSLATE,
+  API_GET_CONVERSATION,
+  API_GET_CONVERSATIONS,
+} from "@constants";
 
 // styles
 import "./Layout.css";
@@ -15,6 +19,9 @@ const LANGUAGES = [
   { code: "German", flag: "🇩🇪", name: "German" },
   { code: "Greek", flag: "🇬🇷", name: "Greek" },
 ];
+
+const getFlag = (code) =>
+  LANGUAGES.find((lang) => lang.code === code)?.flag || "";
 
 const LS_KEY = "translate_prefs";
 
@@ -118,6 +125,11 @@ export const Layout = () => {
   const [isQuestion, setIsQuestion] = useState(prefs.isQuestion || false);
   const [conversationLoading, setConversationLoading] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchTotal, setSearchTotal] = useState(0);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
 
   const updateLatestMessage = (updates) => {
     setMessages((prev) => {
@@ -136,6 +148,15 @@ export const Layout = () => {
     setTarget(v);
     savePrefs({ target: v });
   };
+
+  const handleResultClick = (conversation) => {
+    const path =
+      conversation.type === "question"
+        ? `/conversation/${conversation.id}`
+        : `/translation/${conversation.id}`;
+    navigate(path);
+  };
+
   const handleResponseIn = (v) => {
     setResponseIn(v);
     savePrefs({ responseIn: v });
@@ -213,6 +234,67 @@ export const Layout = () => {
       });
     }
   }, [error]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(text.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [text]);
+
+  useEffect(() => {
+    if (!searchQuery) {
+      setSearchResults([]);
+      setSearchTotal(0);
+      setSearchError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchSearchResults = async () => {
+      setSearchLoading(true);
+      setSearchError(null);
+      try {
+        const response = await fetch(
+          `${API_GET_CONVERSATIONS}?limit=20&offset=0&search=${encodeURIComponent(searchQuery)}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + localStorage.getItem("auth"),
+            },
+            signal: controller.signal,
+          },
+        );
+        const result = await response.json();
+        if (result.success && result.data) {
+          const all = result.data.conversations || [];
+          const expectedType = isQuestion ? "question" : "translation";
+          const filtered = all.filter(
+            (conversation) => conversation.type === expectedType,
+          );
+          setSearchResults(filtered);
+          setSearchTotal(filtered.length);
+        } else if (result.error) {
+          setSearchError(result.error);
+          setSearchResults([]);
+          setSearchTotal(0);
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setSearchError("Failed to load history.");
+          setSearchResults([]);
+          setSearchTotal(0);
+        }
+      } finally {
+        setSearchLoading(false);
+      }
+    };
+
+    fetchSearchResults();
+
+    return () => controller.abort();
+  }, [searchQuery, isQuestion]);
 
   useEffect(() => {
     if (!id) {
@@ -307,6 +389,7 @@ export const Layout = () => {
               <div className='translate-language-selector'>
                 <p className='translate-language-selector__label'>
                   {isQuestion ? "ASK ABOUT" : "From"}
+                  {searchQuery ? ` (${searchTotal})` : ""}
                 </p>
                 <div className='translate-language-selector__flags translate-language-selector__flags--translate'>
                   {LANGUAGES.map((lang) => (
@@ -408,6 +491,75 @@ export const Layout = () => {
               </div>
             )}
           </div>
+
+          {searchQuery && (
+            <div className='translate-layout-56yl__search-results'>
+              <p className='translate-layout-56yl__search-results-title'>
+                Already in your history
+              </p>
+
+              {searchLoading && (
+                <p className='translate-layout-56yl__search-empty'>Searching...</p>
+              )}
+
+              {searchError && (
+                <p className='color-danger translate-layout-56yl__search-empty'>
+                  {searchError}
+                </p>
+              )}
+
+              {!searchLoading && !searchError && searchResults.length === 0 && (
+                <p className='translate-layout-56yl__search-empty'>
+                  No matches found.
+                </p>
+              )}
+
+              {searchResults.length > 0 && (
+                <ul className='translate-layout-56yl__search-list'>
+                  {searchResults.map((conversation) => (
+                    <li
+                      key={conversation.id}
+                      className='translate-layout-56yl__search-item'
+                      onClick={() => handleResultClick(conversation)}
+                      role='button'
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          handleResultClick(conversation);
+                        }
+                      }}
+                    >
+                      {conversation.type === "question" ? (
+                        <p className='translate-layout-56yl__search-preview'>
+                          <span className='translate-layout-56yl__search-flag'>
+                            {getFlag(conversation.source)}
+                          </span>
+                          {conversation.first_user_message || "No question"}
+                        </p>
+                      ) : (
+                        <div className='translate-layout-56yl__search-preview'>
+                          <p className='translate-layout-56yl__search-preview-row'>
+                            <span className='translate-layout-56yl__search-flag'>
+                              {getFlag(conversation.source)}
+                            </span>
+                            {conversation.first_user_message ||
+                              "No source text"}
+                          </p>
+                          <p className='translate-layout-56yl__search-preview-row'>
+                            <span className='translate-layout-56yl__search-flag'>
+                              {getFlag(conversation.target)}
+                            </span>
+                            {conversation.first_assistant_message ||
+                              "No translation"}
+                          </p>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {/* <div className='translate-layout-56yl__right'>
             <div className='translate-layout-56yl__messages'>
