@@ -12,8 +12,9 @@ const urlsToCache = [
   "https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js",
 ];
 
-// Install event - cache resources
+// Install event - cache resources and activate immediately
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches
       .open(CACHE_NAME)
@@ -27,39 +28,72 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Fetch event - serve cached content when offline
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
+// Activate event - take control of clients and clean up old caches
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
     caches
-      .match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              console.log("Deleting old cache:", cacheName);
+              return caches.delete(cacheName);
+            }
+          }),
+        );
       })
-      .catch(() => {
-        // If both cache and network fail, return offline page for navigation requests
-        if (event.request.destination === "document") {
-          return caches.match("/");
-        }
-      }),
+      .then(() => self.clients.claim()),
   );
 });
 
-// Activate event - clean up old caches
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log("Deleting old cache:", cacheName);
-            return caches.delete(cacheName);
-          }
+// Fetch event - network-first for HTML pages, cache-first for static assets
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  const isNavigation =
+    request.mode === "navigate" || request.destination === "document";
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          const responseToCache = networkResponse.clone();
+          caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.put(request, responseToCache));
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(request).then((cached) => {
+            return cached || caches.match("/");
+          });
         }),
-      );
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(request)
+        .then((networkResponse) => {
+          if (
+            !networkResponse ||
+            networkResponse.status !== 200 ||
+            networkResponse.type !== "basic"
+          ) {
+            return networkResponse;
+          }
+          const responseToCache = networkResponse.clone();
+          caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.put(request, responseToCache));
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
     }),
   );
 });
@@ -110,6 +144,6 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   if (event.action === "explore") {
-    event.waitUntil(clients.openWindow("/"));
+    event.waitUntil(self.clients.openWindow("/"));
   }
 });
