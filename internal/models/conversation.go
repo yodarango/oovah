@@ -223,7 +223,7 @@ func GetConversations(userId, limit, offset int, search string) ([]struct {
 		WHERE ? = '' OR
 			  (type = 'translation' AND (first_user_message LIKE ? OR first_assistant_message LIKE ?)) OR
 			  (type = 'question' AND first_user_message LIKE ?)
-		ORDER BY updated_at DESC, id DESC
+		ORDER BY created_at DESC, id DESC
 		LIMIT ? OFFSET ?
 	`
 	rows, err := ModelsRepo.DB.Conn.Query(query, userId, search, searchPattern, searchPattern, searchPattern, limit, offset)

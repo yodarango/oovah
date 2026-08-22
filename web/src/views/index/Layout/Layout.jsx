@@ -121,7 +121,7 @@ export const Layout = () => {
   const [source, setSource] = useState(prefs.source || "English");
   const [target, setTarget] = useState(prefs.target || "Spanish");
   const [responseIn, setResponseIn] = useState(prefs.responseIn || "English");
-  const [text, setText] = useState("");
+  const [text, setText] = useState(prefs.text || "");
   const [isQuestion, setIsQuestion] = useState(prefs.isQuestion || false);
   const [conversationLoading, setConversationLoading] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -222,6 +222,10 @@ export const Layout = () => {
       }
     },
   });
+
+  useEffect(() => {
+    savePrefs({ text });
+  }, [text]);
 
   useEffect(() => {
     if (error) {
@@ -339,21 +343,11 @@ export const Layout = () => {
       showErrorToast("Please enter some text to translate.");
       return;
     }
-    handleTarget(lang);
     if (source === lang) {
-      setMessages((prev) => [
-        {
-          userText: text,
-          translation: text,
-          isQuestion: false,
-          questionData: null,
-          loading: false,
-        },
-        ...prev,
-      ]);
-      setText("");
+      showErrorToast("Please choose a different target language.");
       return;
     }
+    handleTarget(lang);
     setMessages((prev) => [
       {
         userText: text,

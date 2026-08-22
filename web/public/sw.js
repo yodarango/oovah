@@ -1,5 +1,5 @@
 // Service Worker for oovah PWA
-const CACHE_NAME = "oovah";
+const CACHE_NAME = "oovah-v2";
 const urlsToCache = [
   "/",
   "/auth",
@@ -50,8 +50,17 @@ self.addEventListener("activate", (event) => {
 // Fetch event - network-first for HTML pages, cache-first for static assets
 self.addEventListener("fetch", (event) => {
   const { request } = event;
+  const requestUrl = new URL(request.url);
+  const isApiRequest = requestUrl.pathname.startsWith("/api/");
   const isNavigation =
     request.mode === "navigate" || request.destination === "document";
+
+  // API responses contain user-specific, frequently changing data and must
+  // always come from the network rather than the Cache API.
+  if (isApiRequest) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   if (isNavigation) {
     event.respondWith(
