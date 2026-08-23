@@ -211,8 +211,8 @@ func GetConversations(userId, limit, offset int, search string) ([]struct {
 				c.created_at,
 				c.updated_at,
 				COUNT(m.id) AS message_count,
-				(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'user' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_user_message,
-				(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'assistant' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_assistant_message
+				COALESCE((SELECT content FROM messages WHERE conversation_id = c.id AND role = 'user' ORDER BY created_at ASC, id ASC LIMIT 1), '') AS first_user_message,
+				COALESCE((SELECT content FROM messages WHERE conversation_id = c.id AND role = 'assistant' ORDER BY created_at ASC, id ASC LIMIT 1), '') AS first_assistant_message
 			FROM conversations c
 			LEFT JOIN messages m ON m.conversation_id = c.id
 			WHERE c.user_id = ?
@@ -274,8 +274,8 @@ func GetConversations(userId, limit, offset int, search string) ([]struct {
 				c.id,
 				c.type,
 				COUNT(m.id) AS message_count,
-				(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'user' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_user_message,
-				(SELECT content FROM messages WHERE conversation_id = c.id AND role = 'assistant' ORDER BY created_at ASC, id ASC LIMIT 1) AS first_assistant_message
+				COALESCE((SELECT content FROM messages WHERE conversation_id = c.id AND role = 'user' ORDER BY created_at ASC, id ASC LIMIT 1), '') AS first_user_message,
+				COALESCE((SELECT content FROM messages WHERE conversation_id = c.id AND role = 'assistant' ORDER BY created_at ASC, id ASC LIMIT 1), '') AS first_assistant_message
 			FROM conversations c
 			LEFT JOIN messages m ON m.conversation_id = c.id
 			WHERE c.user_id = ?
