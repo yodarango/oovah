@@ -16,6 +16,22 @@ const LANGUAGES = [
   { code: "Greek", flag: "🇬🇷", name: "Greek" },
 ];
 
+const getInitialQuestionText = (targetLanguage, sourceText, translatedText) => {
+  switch (targetLanguage) {
+    case "Spanish":
+      return `Sobre la palabra "${sourceText}" que se traduce como "${translatedText}" al español. `;
+    case "Italian":
+      return `Sulla parola "${sourceText}" che si traduce come "${translatedText}" in italiano. `;
+    case "German":
+      return `Zum Wort "${sourceText}", das als "${translatedText}" ins Deutsche übersetzt wird. `;
+    case "Greek":
+      return `Σχετικά με τη λέξη "${sourceText}" που μεταφράζεται ως "${translatedText}" στα ελληνικά. `;
+    case "English":
+    default:
+      return `About the word "${sourceText}" which translates as "${translatedText}" into English. `;
+  }
+};
+
 export const Layout = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -135,7 +151,7 @@ export const Layout = () => {
       )
     : [];
   const initialQuestionText = hasTranslation
-    ? `About the word "${sourceText}" which translates as "${translatedText}" into "${conversation.target}". `
+    ? getInitialQuestionText(conversation.target, sourceText, translatedText)
     : "";
 
   const handleOpenChatModal = () => {
