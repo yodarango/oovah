@@ -36,10 +36,19 @@ func DBConnection() (*sql.DB, error) {
 		}
 	}
 
-	db, err := sql.Open("sqlite", dbPath)
+	// busy_timeout: wait up to 5s for locks instead of failing instantly with SQLITE_BUSY.
+	// journal_mode(WAL): readers no longer block the single writer.
+	// foreign_keys: enforce ON DELETE CASCADE and other FK constraints.
+	dsn := fmt.Sprintf("file:%s?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)", dbPath)
+
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start db: \n %w", err)
 	}
+
+	// SQLite only allows one writer at a time; a single pooled connection
+	// serializes all access and eliminates SQLITE_BUSY under concurrency.
+	db.SetMaxOpenConns(1)
 
 	// Verify the database is reachable
 	err = db.Ping()
