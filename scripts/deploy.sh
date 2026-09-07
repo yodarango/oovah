@@ -50,6 +50,9 @@ echo 'Current directory: '; pwd; \
 echo '🏗️ Building docker now...';\
 $RESET_COMMANDS \
 docker compose up -d --build; \
+echo '🧹 Cleaning old docker build cache and dangling images...'; \
+docker image prune -f; \
+docker builder prune -f --filter until=24h; \
 echo '🚀🚀🚀 Deployment successful'"
 
 

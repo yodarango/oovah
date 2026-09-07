@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { TextArea, Button } from "@ds";
+import { TextArea, Button, Markdown } from "@ds";
 import { usePost } from "@utils";
 import { API_POST_TRANSLATE, API_GET_CONVERSATION } from "@constants";
 
@@ -214,7 +214,7 @@ export const Layout = () => {
                 {message.loading ? (
                   <p className='opacity-50'>Thinking...</p>
                 ) : (
-                  <p>{message.translation}</p>
+                  <Markdown>{message.translation}</Markdown>
                 )}
               </div>
               {message.isQuestion && message.questionData && (
@@ -239,9 +239,9 @@ export const Layout = () => {
                     </span>
                   </div>
                   {message.questionData.hasCorrections && (
-                    <p className='conversation-layout-56yl__corrections-text'>
+                    <Markdown className='conversation-layout-56yl__corrections-text'>
                       {message.questionData.corrections}
-                    </p>
+                    </Markdown>
                   )}
                 </div>
               )}

@@ -1,7 +1,8 @@
 import { useAppContext } from "../../context/appContextProvider";
 import { Input, Button, Modal, Thumbnail, IfElse, AvatarPicker } from "@ds";
 import React, { useState, useEffect } from "react";
-import { API_POST_UPDATE_PROFILE } from "@constants";
+import { API_POST_UPDATE_PROFILE, ROUTE_AUTH } from "@constants";
+import { useNavigate } from "react-router-dom";
 import { usePost } from "@utils";
 import { avatars } from "@images";
 
@@ -9,7 +10,8 @@ import { avatars } from "@images";
 import "./Layout.css";
 
 export const Layout = () => {
-  const { showToast, setupAuth, state } = useAppContext();
+  const { showToast, setupAuth, logout, state } = useAppContext();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
@@ -57,6 +59,11 @@ export const Layout = () => {
   const handleAvatarSave = (avatarPath) => {
     setFormData((prev) => ({ ...prev, avatar: avatarPath }));
     setShowAvatarModal(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate(ROUTE_AUTH, { replace: true });
   };
 
   const chosenAvater =
@@ -238,6 +245,13 @@ export const Layout = () => {
           Save Changes
         </Button>
       </form>
+
+      <div className='profile-layout-56yl__logout'>
+        <Button type='button' onClick={handleLogout} className='w-100' primary>
+          <ion-icon name='log-out-outline'></ion-icon>
+          Logout
+        </Button>
+      </div>
 
       <Modal
         onClose={() => setShowAvatarModal(false)}

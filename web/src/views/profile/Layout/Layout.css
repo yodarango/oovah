@@ -73,6 +73,18 @@
   font-size: 1.8rem;
 }
 
+.profile-layout-56yl__logout {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.profile-layout-56yl__logout ion-icon {
+  font-size: 1.6rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
 @media (max-width: 480px) {
   .profile-layout-56yl__row--2-col {
     grid-template-columns: 1fr;

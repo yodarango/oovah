@@ -13,6 +13,7 @@ export { Input } from "./Input/Input";
 export { Modal } from "./Modal/Modal";
 export { Toast } from "./Toast/Toast";
 export { Loading } from "./Loading";
+export { Markdown } from "./Markdown/Markdown";
 export {
   PopupMenuDivider,
   PopupMenuItem,
