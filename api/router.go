@@ -543,8 +543,13 @@ func GetConversations(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	conversations, total, err := models.GetConversations(userId, limit, offset, search)
+	conversations, total, err := models.GetConversations(r.Context(), userId, limit, offset, search)
 	if err != nil {
+		// The client disconnected or aborted the request (e.g. a superseded
+		// search keystroke); there is nothing left to respond to.
+		if r.Context().Err() != nil {
+			return
+		}
 		httpResponse.Error = fmt.Sprintf("%v", err)
 		httpResponse.Success = false
 		httpResponse.Data = nil

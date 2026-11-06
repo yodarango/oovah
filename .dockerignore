@@ -1,0 +1,19 @@
+# Version control / tooling
+.git
+.github
+.vscode
+.DS_Store
+
+# Frontend: installed/built inside the image
+node_modules
+web/node_modules
+web/dist
+
+# Secrets and local data (mounted at runtime instead)
+.env
+*.db
+*.db-shm
+*.db-wal
+
+# Deploy helper scripts, not needed in the image
+scripts

@@ -1,13 +1,15 @@
+# syntax=docker/dockerfile:1
+
 # Build stage for React frontend
 FROM node:20-alpine AS frontend-build
 
 WORKDIR /app/web
 
 COPY web/package*.json ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 COPY web/ ./
-RUN npm run build
+RUN --mount=type=cache,target=/root/.npm npm run build
 
 # Build stage for Go backend
 FROM golang:1.25-alpine AS backend-build
@@ -15,7 +17,7 @@ FROM golang:1.25-alpine AS backend-build
 WORKDIR /app
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 COPY cmd/ ./cmd/
 COPY api/ ./api/
@@ -25,7 +27,9 @@ COPY constants/ ./constants/
 COPY repo/ ./repo/
 COPY templates/ ./templates/
 
-RUN CGO_ENABLED=0 go build -o server ./cmd/main
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 go build -o server ./cmd/main
 
 # Final stage
 FROM alpine:latest

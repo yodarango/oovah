@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"sort"
@@ -191,7 +192,7 @@ func GetRecentMessagesByConversationId(conversationId, userLimit, assistantLimit
 // applied to both the first user message (source) and the first assistant message
 // (target). For question conversations, the search is applied only to the
 // first user message (original question).
-func GetConversations(userId, limit, offset int, search string) ([]struct {
+func GetConversations(ctx context.Context, userId, limit, offset int, search string) ([]struct {
 	Conversation
 	MessageCount          int    `json:"message_count"`
 	FirstUserMessage      string `json:"first_user_message"`
@@ -226,7 +227,7 @@ func GetConversations(userId, limit, offset int, search string) ([]struct {
 		ORDER BY created_at DESC, id DESC
 		LIMIT ? OFFSET ?
 	`
-	rows, err := ModelsRepo.DB.Conn.Query(query, userId, search, searchPattern, searchPattern, searchPattern, limit, offset)
+	rows, err := ModelsRepo.DB.Conn.QueryContext(ctx, query, userId, search, searchPattern, searchPattern, searchPattern, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("could not get conversations: %w", err)
 	}
@@ -268,6 +269,12 @@ func GetConversations(userId, limit, offset int, search string) ([]struct {
 		return nil, 0, fmt.Errorf("error iterating conversations: %w", err)
 	}
 
+	// A short page means the end of the result set was reached, so the total
+	// is already known and the expensive count query can be skipped.
+	if len(conversations) < limit {
+		return conversations, offset + len(conversations), nil
+	}
+
 	countQuery := `
 		WITH conversation_data AS (
 			SELECT
@@ -288,7 +295,7 @@ func GetConversations(userId, limit, offset int, search string) ([]struct {
 			  (type = 'question' AND first_user_message LIKE ?)
 	`
 	var total int
-	err = ModelsRepo.DB.Conn.QueryRow(countQuery, userId, search, searchPattern, searchPattern, searchPattern).Scan(&total)
+	err = ModelsRepo.DB.Conn.QueryRowContext(ctx, countQuery, userId, search, searchPattern, searchPattern, searchPattern).Scan(&total)
 	if err != nil {
 		return nil, 0, fmt.Errorf("could not count conversations: %w", err)
 	}

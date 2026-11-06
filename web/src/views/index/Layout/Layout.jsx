@@ -251,6 +251,7 @@ export const Layout = () => {
       setSearchResults([]);
       setSearchTotal(0);
       setSearchError(null);
+      setSearchLoading(false);
       return;
     }
 
@@ -291,7 +292,11 @@ export const Layout = () => {
           setSearchTotal(0);
         }
       } finally {
-        setSearchLoading(false);
+        // A superseded (aborted) request must not clear the loading state
+        // of the latest request.
+        if (!controller.signal.aborted) {
+          setSearchLoading(false);
+        }
       }
     };
 
@@ -369,6 +374,12 @@ export const Layout = () => {
     });
   };
 
+  const trimmedText = text.trim();
+  // True from the moment the user types until the matching history search
+  // resolves: covers both the debounce window and the in-flight request.
+  const isSearching =
+    !!trimmedText && (trimmedText !== searchQuery || searchLoading);
+
   return (
     <div className='translate-layout-56yl'>
       {loading && (
@@ -383,7 +394,7 @@ export const Layout = () => {
               <div className='translate-language-selector'>
                 <p className='translate-language-selector__label'>
                   {isQuestion ? "ASK ABOUT" : "From"}
-                  {searchQuery ? ` (${searchTotal})` : ""}
+                  {searchQuery && !isSearching ? ` (${searchTotal})` : ""}
                 </p>
                 <div className='translate-language-selector__flags translate-language-selector__flags--translate'>
                   {LANGUAGES.map((lang) => (
@@ -486,29 +497,32 @@ export const Layout = () => {
             )}
           </div>
 
-          {searchQuery && (
+          {trimmedText && (
             <div className='translate-layout-56yl__search-results'>
               <p className='translate-layout-56yl__search-results-title'>
                 Already in your history
               </p>
 
-              {searchLoading && (
-                <p className='translate-layout-56yl__search-empty'>Searching...</p>
+              {isSearching && (
+                <p className='translate-layout-56yl__search-status'>
+                  <Loading size={18} color='var(--dr-delta)' />
+                  Searching...
+                </p>
               )}
 
-              {searchError && (
+              {!isSearching && searchError && (
                 <p className='color-danger translate-layout-56yl__search-empty'>
                   {searchError}
                 </p>
               )}
 
-              {!searchLoading && !searchError && searchResults.length === 0 && (
+              {!isSearching && !searchError && searchResults.length === 0 && (
                 <p className='translate-layout-56yl__search-empty'>
                   No matches found.
                 </p>
               )}
 
-              {searchResults.length > 0 && (
+              {!isSearching && searchResults.length > 0 && (
                 <ul className='translate-layout-56yl__search-list'>
                   {searchResults.map((conversation) => (
                     <li

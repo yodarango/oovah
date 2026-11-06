@@ -328,3 +328,12 @@
   color: var(--dr-alpha);
   opacity: 0.7;
 }
+
+.translate-layout-56yl__search-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--dr-alpha);
+  opacity: 0.7;
+}
