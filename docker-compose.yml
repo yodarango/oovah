@@ -1,16 +1,12 @@
 services:
   oovah_app:
-    build: .
-    image: ghcr.io/yodarango/oovah:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oovah_app
     restart: unless-stopped
-    # No host ports published and no fixed container_name: docker-rollout runs
-    # the old and new containers side by side during a deploy, so a published
-    # port (or fixed name) would conflict. The edge proxy below owns host port
-    # 8012 and reaches this service over the internal network; while a rollout
-    # is in progress its DNS name resolves to both containers, so traffic keeps
-    # flowing with zero downtime.
-    expose:
-      - "8012"
+    ports:
+      - "8012:8012"
     environment:
       - SQLITE_DB_PATH=/app/oovah.db
       - STATIC_PATH=web/dist
@@ -19,26 +15,6 @@ services:
     volumes:
       - .:/app
       - ./.env:/root/.env:ro
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8012/api/public-sample"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 10s
-
-  # Always-on proxy: keeps host port 8012 stable while app containers are
-  # swapped by `docker rollout`. Host nginx keeps proxying to 127.0.0.1:8012
-  # exactly as before.
-  edge:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    command: caddy reverse-proxy --from :80 --to oovah_app:8012
-    ports:
-      - "8012:80"
-    depends_on:
-      - oovah_app
-    networks:
-      - app-network
 
 networks:
   app-network:
