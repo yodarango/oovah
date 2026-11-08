@@ -69,3 +69,10 @@
   font-size: 1.4rem;
   font-weight: 600;
 }
+
+/* Wide screens: the options live in the header instead */
+@media (min-width: 801px) {
+  .bottom-nav-56yl {
+    display: none;
+  }
+}

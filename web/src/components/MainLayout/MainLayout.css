@@ -13,3 +13,14 @@
     padding-bottom: 6rem;
   }
 }
+
+/* Wide screens: no fixed bottom nav, so the extra clearance is not needed */
+@media (min-width: 801px) {
+  .main-layout-56yl {
+    padding-bottom: 0;
+  }
+
+  .main-layout-56yl .main-layout-56yl__content {
+    padding-bottom: 2rem;
+  }
+}

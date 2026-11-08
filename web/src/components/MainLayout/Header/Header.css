@@ -65,41 +65,62 @@
   color: var(--dr-alpha);
 }
 
-/* Navigation */
+/* Navigation — wide screens only; below 800px the bottom nav takes over */
 .app-header-56yl__nav {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 0.5rem;
+}
+
+@media (min-width: 801px) {
+  .app-header-56yl__nav {
+    display: flex;
+  }
 }
 
 .app-header-56yl__nav-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
+  gap: 0.6rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 1rem;
   text-decoration: none;
-  color: var(--dr-alpha);
-  font-weight: 500;
-  transition: all 0.2s ease;
+  color: rgb(181, 174, 186);
+  font-weight: 600;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
 }
 
-.app-header-56yl__nav-item.active {
-  background-color: rgba(var(--dr-primary-rgb), 0.15);
-  color: var(--dr-primary);
-  opacity: 1;
+.app-header-56yl__nav-item:hover {
+  color: var(--dr-alpha);
+  text-decoration: none;
+}
+
+.app-header-56yl__nav-item--active {
+  color: var(--dr-delta);
+  background: rgba(124, 58, 237, 0.1);
 }
 
 .app-header-56yl__nav-item ion-icon {
-  font-size: 3rem;
+  font-size: 2rem;
+}
+
+.app-header-56yl__nav-avatar {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--dr-gamma);
+  border: 0.1rem solid transparent;
+}
+
+.app-header-56yl__nav-item--active .app-header-56yl__nav-avatar {
+  border-color: var(--dr-delta);
 }
 
 .app-header-56yl__nav-label {
-  font-size: var(--dr-font-size-4);
-
-  @media (max-width: 768px) {
-    display: none;
-  }
+  font-size: 1.4rem;
 }
 
 /* User Avatar Section */
