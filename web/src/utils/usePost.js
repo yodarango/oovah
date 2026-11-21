@@ -40,7 +40,7 @@ export function usePost(props) {
       setData(result.data);
 
       if (callback) {
-        callback(result.data);
+        callback(result.data, body);
       }
     } catch (err) {
       if (err.name !== "AbortError") {

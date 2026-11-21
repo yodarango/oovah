@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"oovah/constants"
+	"oovah/internal/lib"
 	"oovah/internal/models"
 	"oovah/internal/utils"
 	"os"
@@ -29,6 +30,7 @@ func Router () http.Handler {
 	mux.HandleFunc(constants.ROUTE_POST_CHANGE_PASSWORD, models.Authenticate(ChangePassword))
 	mux.HandleFunc(constants.ROUTE_POST_UPDATE_PROFILE, models.Authenticate(UpdateProfile))
 	mux.HandleFunc(constants.ROUTE_POST_TRANSLATE, models.Authenticate(Translate))
+	mux.HandleFunc(constants.ROUTE_POST_GRAMMAR, models.Authenticate(Grammar))
 	mux.HandleFunc(constants.ROUTE_GET_CONVERSATION, models.Authenticate(ConversationHandler))
 	mux.HandleFunc(constants.ROUTE_GET_CONVERSATIONS, models.Authenticate(GetConversations))
 
@@ -414,6 +416,35 @@ func Translate(w http.ResponseWriter, r *http.Request) {
 	httpResponse.Success = true
 	httpResponse.Error = nil
 	httpResponse.Send(w)
+}
+
+// Grammar analyzes existing translation text without creating a conversation.
+func Grammar(w http.ResponseWriter, r *http.Request) {
+	var response models.HttpResponse
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	var request struct {
+		Source      string `json:"source"`
+		Target      string `json:"target"`
+		Text        string `json:"text"`
+		Translation string `json:"translation"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 32768)).Decode(&request); err != nil || request.Source == "" || request.Target == "" || request.Text == "" || request.Translation == "" {
+		response.Error = "Invalid grammar request"
+		response.Send(w)
+		return
+	}
+	analysis, err := lib.NewTranslationService().AnalyzeGrammar(r.Context(), request.Source, request.Target, request.Text, request.Translation)
+	if err != nil {
+		response.Error = "Could not analyze grammar"
+		response.Send(w)
+		return
+	}
+	response.Data = analysis
+	response.Success = true
+	response.Send(w)
 }
 
 /************************************************************************

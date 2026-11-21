@@ -2,9 +2,56 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import path from "path";
 
+function babelPluginAddDataPath() {
+  const projectRoot = path.resolve(__dirname, "..");
+
+  return {
+    visitor: {
+      JSXOpeningElement(nodePath, state) {
+        const { node } = nodePath;
+        const tagName = node.name.name;
+
+        // Solo elementi HTML nativi (lowercase)
+        if (typeof tagName === "string" && tagName === tagName.toLowerCase()) {
+          const filename = state.file.opts.filename;
+          const relativePath = path.relative(projectRoot, filename);
+
+          // Verifica se data-path esiste già
+          const hasDataPath = node.attributes.some(
+            (attr) => attr.name && attr.name.name === "data-path",
+          );
+
+          if (!hasDataPath) {
+            // Aggiungi l'attributo data-path
+            node.attributes.push({
+              type: "JSXAttribute",
+              name: {
+                type: "JSXIdentifier",
+                name: "data-path",
+              },
+              value: {
+                type: "StringLiteral",
+                value: relativePath,
+              },
+            });
+          }
+        }
+      },
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      babel: {
+        plugins: [mode === "development" && babelPluginAddDataPath].filter(
+          Boolean,
+        ),
+      },
+    }),
+  ],
   // @ds alias for the components directory
   resolve: {
     alias: {

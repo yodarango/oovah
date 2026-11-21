@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button, Modal, TextArea } from "@ds";
 import { usePost } from "@utils";
 import { useAppContext } from "../../context/appContextProvider";
-import { API_GET_CONVERSATION, API_POST_TRANSLATE } from "@constants";
+import { API_GET_CONVERSATION, API_POST_GRAMMAR, API_POST_TRANSLATE } from "@constants";
 
 // styles
 import "./Layout.css";
@@ -32,18 +32,22 @@ const getInitialQuestionText = (targetLanguage, sourceText, translatedText) => {
   }
 };
 
-export const Layout = () => {
+// The existing project does not use runtime prop types for view components.
+// eslint-disable-next-line react/prop-types
+export const Layout = ({ result = null }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useAppContext();
 
-  const [conversation, setConversation] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [conversation, setConversation] = useState(result);
+  const [messages, setMessages] = useState(result?.messages || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [questionText, setQuestionText] = useState("");
   const [translatingTo, setTranslatingTo] = useState(null);
+  const [alternateResult, setAlternateResult] = useState(null);
+  const [grammar, setGrammar] = useState(null);
 
   const {
     post: postQuestion,
@@ -64,10 +68,19 @@ export const Layout = () => {
     error: alternateTranslationError,
   } = usePost({
     url: API_POST_TRANSLATE,
-    callback: (data) => {
+    callback: (data, request) => {
       setTranslatingTo(null);
       if (!data?.conversationId) return;
-      navigate(`/translation/${data.conversationId}`);
+      setAlternateResult({
+        id: data.conversationId,
+        type: "translation",
+        source: request.source,
+        target: request.target,
+        messages: [
+          { role: "user", content: request.text },
+          { role: "assistant", content: data.translation },
+        ],
+      });
     },
   });
 
@@ -82,7 +95,7 @@ export const Layout = () => {
   }, [chatError, alternateTranslationError]);
 
   useEffect(() => {
-    if (!id) return;
+    if (result || !id) return;
 
     const fetchConversation = async () => {
       setLoading(true);
@@ -98,8 +111,8 @@ export const Layout = () => {
           const conversationData = result.data;
           setConversation(conversationData);
           setMessages(conversationData.messages || []);
-        } else if (result.error) {
-          setError(result.error);
+        } else if (result.errors) {
+          setError(result.errors);
         }
       } catch {
         setError("Failed to load translation.");
@@ -109,7 +122,29 @@ export const Layout = () => {
     };
 
     fetchConversation();
-  }, [id]);
+  }, [id, result]);
+
+  const sourceText = [...messages].reverse().find((m) => m.role === "user")?.content || "";
+  const translatedText = [...messages].reverse().find((m) => m.role === "assistant")?.content || "";
+
+  useEffect(() => {
+    if (result || conversation?.type !== "translation" || !sourceText || !translatedText) return;
+    const controller = new AbortController();
+    setGrammar(null);
+    fetch(API_POST_GRAMMAR, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("auth"),
+      },
+      body: JSON.stringify({ source: conversation.source, target: conversation.target, text: sourceText, translation: translatedText }),
+      signal: controller.signal,
+    })
+      .then((response) => response.json())
+      .then((response) => { if (response.success) setGrammar(response.data); })
+      .catch((err) => { if (err.name !== "AbortError") console.error("Failed to load grammar:", err); });
+    return () => controller.abort();
+  }, [result, conversation, sourceText, translatedText]);
 
   if (loading) {
     return <p className='translate-page-layout-56yl__empty'>Loading...</p>;
@@ -135,8 +170,6 @@ export const Layout = () => {
     ? LANGUAGES.find((lang) => lang.code === conversation.target)?.flag
     : null;
 
-  const sourceText = lastUserMessage?.content || "";
-  const translatedText = lastAssistantMessage?.content || "";
   const hasTranslation = Boolean(
     conversation?.type === "translation" &&
       conversation?.source &&
@@ -203,15 +236,22 @@ export const Layout = () => {
   };
 
   return (
-    <div className='translate-page-layout-56yl'>
+    <div className={`translate-page-layout-56yl ${result ? "translate-page-layout-56yl--preview" : ""}`}>
       <div className='translate-page-layout-56yl__container'>
+        {result ? (
+          <Link className='translate-page-layout-56yl__preview-link' to={`/translation/${conversation.id}`}>
+            <span>{sourceFlag} {sourceText}</span>
+            <span aria-hidden='true'> → </span>
+            <span>{targetFlag} {translatedText}</span>
+          </Link>
+        ) : <>
         <h1 className='translate-page-layout-56yl__text'>
           {sourceFlag && (
             <span className='translate-page-layout-56yl__flag'>
               {sourceFlag}
             </span>
           )}
-          {lastUserMessage ? lastUserMessage.content : "No text found."}
+          {lastUserMessage ? <GrammarText text={sourceText} parts={grammar?.source} /> : "No text found."}
         </h1>
         <ion-icon
           className='translate-page-layout-56yl__icon'
@@ -224,9 +264,10 @@ export const Layout = () => {
             </span>
           )}
           {lastAssistantMessage
-            ? lastAssistantMessage.content
+            ? <GrammarText text={translatedText} parts={grammar?.target} />
             : "No translation found."}
         </h1>
+        </>}
 
         {hasTranslation && alternateLanguages.length > 0 && (
           <div className='translate-page-layout-56yl__language-selector'>
@@ -304,6 +345,17 @@ export const Layout = () => {
           Start chat
         </Button>
       </Modal>
+      {alternateResult && <Layout key={alternateResult.id} result={alternateResult} />}
     </div>
   );
+};
+
+const GrammarText = ({ text, parts }) => {
+  if (!Array.isArray(parts) || parts.map((part) => part.text).join("") !== text) return text;
+  return parts.map((part, index) => part.tag ? (
+    <span className='translate-page-layout-56yl__word' key={index}>
+      <span>{part.text}</span>
+      <span className='translate-page-layout-56yl__grammar'>{part.tag}</span>
+    </span>
+  ) : <span key={index}>{part.text}</span>);
 };

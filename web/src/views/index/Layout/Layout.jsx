@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { TextArea, Switch, Button, Loading } from "@ds";
 import { usePost } from "@utils";
 import { useAppContext } from "../../context/appContextProvider";
+import { Layout as TranslationResult } from "../../translate/Layout/Layout";
 import {
   API_POST_TRANSLATE,
   API_GET_CONVERSATION,
@@ -130,6 +131,7 @@ export const Layout = () => {
   const [searchTotal, setSearchTotal] = useState(0);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState(null);
+  const [translationResult, setTranslationResult] = useState(null);
 
   const updateLatestMessage = (updates) => {
     setMessages((prev) => {
@@ -193,9 +195,9 @@ export const Layout = () => {
 
   const { post, loading, error } = usePost({
     url: API_POST_TRANSLATE,
-    callback: (data) => {
+    callback: (data, request) => {
       if (!data || !data.translation) return;
-      if (isQuestion) {
+      if (request.isQuestion) {
         const parsed = parseQuestionResponse(data.translation);
         if (parsed) {
           updateLatestMessage({
@@ -211,14 +213,22 @@ export const Layout = () => {
         }
       } else {
         updateLatestMessage({ translation: data.translation });
+        if (data.conversationId) {
+          setTranslationResult({
+            id: data.conversationId,
+            type: "translation",
+            source: request.source,
+            target: request.target,
+            messages: [
+              { role: "user", content: request.text },
+              { role: "assistant", content: data.translation },
+            ],
+          });
+        }
       }
 
-      if (data.conversationId && String(data.conversationId) !== id) {
-        navigate(
-          isQuestion
-            ? `/conversation/${data.conversationId}`
-            : `/translation/${data.conversationId}`,
-        );
+      if (request.isQuestion && data.conversationId && String(data.conversationId) !== id) {
+        navigate(`/conversation/${data.conversationId}`);
       }
     },
   });
@@ -496,6 +506,10 @@ export const Layout = () => {
               </div>
             )}
           </div>
+
+          {translationResult && !isQuestion && (
+            <TranslationResult key={translationResult.id} result={translationResult} />
+          )}
 
           {trimmedText && (
             <div className='translate-layout-56yl__search-results'>
